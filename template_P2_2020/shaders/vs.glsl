@@ -7,7 +7,8 @@ in vec3 vPosition;			// untransformed vertex position
 
 // shader output
 out vec4 normal;			// transformed vertex normal
-out vec2 uv;				
+out vec2 uv;	
+out vec3 position;
 uniform mat4 transform;
  
 // vertex shader
