@@ -47,8 +47,8 @@ namespace Template
 
 		public SceneGraph()
 		{
-			world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/tiles.jpg"), Matrix4.CreateScale(4.0f) * Matrix4.CreateFromAxisAngle(new Vector3(0, 1, 0), 0));
-			teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateFromAxisAngle(new Vector3(0, 1, 0), 0));
+			world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/tiles.jpg"), Matrix4.CreateScale(4.0f));
+			teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f));
 		}
 
 		public void Render(Matrix4 camera, Shader shader)

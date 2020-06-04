@@ -18,6 +18,7 @@ void main()
 	gl_Position = transform * vec4(vPosition, 1.0);
 
 	// forward normal and uv coordinate; will be interpolated over triangle
-	normal = transform * vec4( vNormal, 0.0f );
+
+	normal = transform * vec4(vNormal, 0);
 	uv = vUV;
 }

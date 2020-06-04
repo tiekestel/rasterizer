@@ -17,8 +17,7 @@ void main()
 
     //Diffuse light
     vec3 directionalLight = normalize(vec3(1, -1, 0));
-    float angle = 0.1;
-    //float angle = max(dot(directionalLight, normal.xyz), 0);
+    float angle = max(dot(directionalLight, normal.xyz), 0);
 
     //Specular light
     float specular = 0.0;
@@ -30,4 +29,4 @@ void main()
     }
 
     outputColor += vec4(angle, angle, angle, 0) + vec4(specular, specular, specular, 0);
-}
+} 

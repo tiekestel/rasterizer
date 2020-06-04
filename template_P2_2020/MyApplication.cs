@@ -31,44 +31,42 @@ namespace Template
 			target = new RenderTarget( screen.width, screen.height );
 			quad = new ScreenQuad();
 
-			camera = Matrix4.CreateTranslation(new Vector3(0, -14.5f, 0)) * Matrix4.CreateFromAxisAngle(new Vector3(1, 0, 0), (float)Math.PI / 2) * Matrix4.CreatePerspectiveFieldOfView(1.2f, 1.3f, .1f, 1000);
+            camera = new Matrix4();
 
 			scene = new SceneGraph();
 		}
 
+        Vector3 cameraPosition = new Vector3(0, -14.5f, 0);
 		// tick for background surface
 		public void Tick()
 		{
-			KeyboardState keys = Keyboard.GetState();
+            // measure frame duration
+
+            KeyboardState keys = Keyboard.GetState();
 
 			if (keys.IsKeyDown(Key.A))
 			{
-				camera *= Matrix4.CreateTranslation(new Vector3(1, 0, 0) * (float)timer.Elapsed.TotalSeconds);
+                cameraPosition.X += (float)timer.Elapsed.TotalSeconds * 10;
 			}
 			else if (keys.IsKeyDown(Key.D))
 			{
-				camera *= Matrix4.CreateTranslation(new Vector3(-1, 0, 0) * (float)timer.Elapsed.TotalSeconds);
-			}
-			else if (keys.IsKeyDown(Key.W))
+                cameraPosition.X -= (float)timer.Elapsed.TotalSeconds * 10;
+            }
+			if (keys.IsKeyDown(Key.W))
 			{
-				camera *= Matrix4.CreateTranslation(new Vector3(0, -1, 0) * (float)timer.Elapsed.TotalSeconds);
-			}
+                cameraPosition.Z += (float)timer.Elapsed.TotalSeconds * 10;
+            }
 			else if (keys.IsKeyDown(Key.S))
 			{
-				camera *= Matrix4.CreateTranslation(new Vector3(0, 1, 0) * (float)timer.Elapsed.TotalSeconds);
-			}
-
-			timer.Restart();
-		}
+                cameraPosition.Z -= (float)timer.Elapsed.TotalSeconds * 10;
+            }
+            camera = Matrix4.CreateTranslation(cameraPosition) * Matrix4.CreateFromAxisAngle(Vector3.UnitX, (float)Math.PI / 2) * Matrix4.CreatePerspectiveFieldOfView(1.2f, 1.3f, .1f, 1000);
+            timer.Restart();
+        }
 
 		// tick for OpenGL rendering code
 		public void RenderGL()
 		{
-			// measure frame duration
-			float frameDuration = timer.ElapsedMilliseconds;
-			timer.Reset();
-			timer.Start();
-
 			// update rotation
 			scene.Render(camera, shader);
 		}
