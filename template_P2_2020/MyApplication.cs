@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using System;
 using OpenTK.Input;
 
@@ -32,7 +33,6 @@ namespace Template
 			quad = new ScreenQuad();
 
             camera = new Matrix4();
-
 			scene = new SceneGraph();
 		}
 

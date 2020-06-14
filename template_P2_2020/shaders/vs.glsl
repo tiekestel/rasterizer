@@ -1,5 +1,4 @@
-﻿#version 330
- 
+﻿#version 420
 // shader input
 in vec2 vUV;				// vertex uv coordinate
 in vec3 vNormal;			// untransformed vertex normal
@@ -15,8 +14,9 @@ uniform mat4 transform;
 void main()
 {
 	// transform vertex using supplied matrix
+	position = (transform * vec4(vPosition, 1.0)).xyz;
 	gl_Position = transform * vec4(vPosition, 1.0);
-
+	
 	// forward normal and uv coordinate; will be interpolated over triangle
 
 	normal = transform * vec4(vNormal, 0);

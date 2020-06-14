@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -48,7 +49,7 @@ namespace Template
 		}
 
 		// render the mesh using the supplied shader and matrix
-		public void Render( Shader shader, Matrix4 transform, Texture texture )
+		public void Render( Shader shader, Matrix4 transform, Texture texture, Texture normalMap, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights )
 		{
 			// on first run, prepare buffers
 			Prepare( shader );
@@ -62,14 +63,78 @@ namespace Template
 			GL.ActiveTexture( TextureUnit.Texture0 );
 			GL.BindTexture( TextureTarget.Texture2D, texture.id );
 
-			// enable shader
-			GL.UseProgram( shader.programID );
+            // enable normal map
 
-			// pass transform to vertex shader
+            if(normalMap != null)
+            {
+                int normalLoc = GL.GetUniformLocation(shader.programID, "normalMap");
+                GL.Uniform1(normalLoc, 1);
+                GL.ActiveTexture(TextureUnit.Texture1);
+                GL.BindTexture(TextureTarget.Texture2D, normalMap.id);
+            }
+
+            // enable shader
+            GL.UseProgram( shader.programID );
+
+            // pass transform to vertex shader
 			GL.UniformMatrix4( shader.uniform_mview, false, ref transform );
 
-			// enable position, normal and uv attributes
-			GL.EnableVertexAttribArray( shader.attribute_vpos );
+            int isNormal = GL.GetUniformLocation(shader.programID, "isNormalMap");
+            if(normalMap != null)
+            {
+                GL.Uniform1(isNormal, 1);
+            }
+            else
+            {
+                GL.Uniform1(isNormal, 0);
+            }
+
+            //Directional lights
+            for (int i = 0; i < directionalLights.Count; ++i)
+            {
+                int direction = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].direction");
+                int color = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].color");
+                int strength = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].strength");
+                GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].finalDirection.Xyz));
+                GL.Uniform3(color, directionalLights[i].color);
+                GL.Uniform1(strength, directionalLights[i].strength);
+            }
+            int location = GL.GetUniformLocation(shader.programID, "directionalLightCount");
+            GL.Uniform1(location, directionalLights.Count);
+            
+            //Pointlights
+            for (int i = 0; i < pointlights.Count; ++i)
+            {
+                int position = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].position");
+                int color = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].color");
+                int strength = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].strength");
+                GL.Uniform3(position, pointlights[i].finalPostion.Xyz);
+                GL.Uniform3(color, pointlights[i].color);
+                GL.Uniform1(strength, pointlights[i].strength);
+            }
+            location = GL.GetUniformLocation(shader.programID, "pointlightCount");
+            GL.Uniform1(location, pointlights.Count);
+
+            //Spotlights
+            for (int i = 0; i < spotlights.Count; ++i)
+            {
+                int direction = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].direction");
+                int position = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].position");
+                int color = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].color");
+                int strength = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].strength");
+                int angle = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].angle");
+                GL.Uniform3(position, spotlights[i].finalPosition.Xyz);
+                GL.Uniform3(direction, Vector3.Normalize(spotlights[i].finalDirection.Xyz));
+                GL.Uniform3(color, spotlights[i].color);
+                GL.Uniform1(strength, spotlights[i].strength);
+                GL.Uniform1(angle, spotlights[i].angle);
+            }
+            location = GL.GetUniformLocation(shader.programID, "spotlightCount");
+            GL.Uniform1(location, spotlights.Count);
+
+
+            // enable position, normal and uv attributes
+            GL.EnableVertexAttribArray( shader.attribute_vpos );
 			GL.EnableVertexAttribArray( shader.attribute_vnrm );
 			GL.EnableVertexAttribArray( shader.attribute_vuvs );
 
