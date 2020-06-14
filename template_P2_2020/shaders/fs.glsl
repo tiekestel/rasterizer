@@ -21,8 +21,8 @@ struct spotlight {
 };
 
 // shader input
-in vec2 uv;						// interpolated texture coordinates
-in vec4 normal;					// interpolated normal
+in vec2 uv;											// interpolated texture coordinates
+in vec4 normal;										// interpolated normal
 in vec3 position;
 layout (binding = 0) uniform sampler2D pixels;		// texture sampler
 layout (binding = 1) uniform sampler2D normalMap;
@@ -39,7 +39,7 @@ vec3 texColor;
 void Phong(in vec3 lightDirection, in float strength, in vec3 color, inout vec3 outColor);
 
 // shader output
-out vec4 outputColor;
+layout(location = 0) out vec4 outputColor;
 
 // fragment shader
 void main()

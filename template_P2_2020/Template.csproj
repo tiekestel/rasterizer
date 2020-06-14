@@ -52,6 +52,7 @@
     <Compile Include="meshLoader.cs" />
     <Compile Include="MyApplication.cs" />
     <Compile Include="parentMesh.cs" />
+    <Compile Include="programValues.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="quad.cs" />
     <Compile Include="rendertarget.cs" />

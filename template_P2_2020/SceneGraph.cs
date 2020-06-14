@@ -99,7 +99,7 @@ namespace Template
         }
     }
 
-    class SceneGraph
+    public class SceneGraph
 	{
 		ParentMesh world;
 		ParentMesh teapot;
@@ -109,8 +109,8 @@ namespace Template
 
 		public SceneGraph()
 		{
-			world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), new Texture("../../normalMaps/crystal.jpg"));
-			teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(5, 0, 0)));
+			world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), false, new Texture("../../normalMaps/crystal.jpg"));
+			teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(5, 0, 0)), true);
             directionalLights = new List<DirectionalLight>();
             directionalLights.Add(new DirectionalLight(new Vector4(-1, 1, 0, 1), 0.1f, new Vector3(1, 1, 1), null));
             pointlights = new List<Pointlight>();
@@ -119,7 +119,7 @@ namespace Template
             spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0, -1, 0, 1), 100, new Vector3(0, 0, 1), null, 0.8f));
 		}
 
-		public void Render(Matrix4 camera, Shader shader)
+		public void Render(Matrix4 camera, Shader shader, ParentMesh parentMesh)
 		{
             foreach(DirectionalLight d in directionalLights)
             {
@@ -136,8 +136,13 @@ namespace Template
                 s.CalcFinal(camera);
             }
 
-			world.Render(Matrix4.Identity, camera, shader, pointlights, directionalLights, spotlights);
-			teapot.Render(Matrix4.Identity, camera, shader, pointlights, directionalLights, spotlights);
+			world.Render(Matrix4.Identity, camera, shader, pointlights, directionalLights, spotlights, parentMesh);
+			teapot.Render(Matrix4.Identity, camera, shader, pointlights, directionalLights, spotlights, parentMesh);
 		}
+
+        public void FullRender(Matrix4 camera, Shader shader)
+        {
+            Render(camera, shader, null);
+        }
     }
 }
