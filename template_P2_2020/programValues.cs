@@ -8,8 +8,7 @@ namespace Template
 {
 	public static class programValues
 	{
-		public static SceneGraph scene;
-		public static int cubemapbuffer, cubemapColorbuffer;
-		public static int skybox;
+        public static Shader cubemapshader, skyboxshader;
+        public static int screenwidth, screenheight, cubemapres = 128, cubemap;
 	}
 }

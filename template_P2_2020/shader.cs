@@ -32,6 +32,23 @@ namespace Template
 			texid = GL.GetUniformLocation(programID, "renderedTexture");
 		}
 
+        public Shader( string vertexShader, string geometryShader, string fragmentShader)
+        {
+            programID = GL.CreateProgram();
+            Load(vertexShader, ShaderType.VertexShader, programID, out vsID);
+            Load(geometryShader, ShaderType.GeometryShader, programID, out vsID);
+            Load(fragmentShader, ShaderType.FragmentShader, programID, out fsID);
+            GL.LinkProgram(programID);
+            Console.WriteLine(GL.GetProgramInfoLog(programID));
+
+            // get locations of shader parameters
+            attribute_vpos = GL.GetAttribLocation(programID, "vPosition");
+            attribute_vnrm = GL.GetAttribLocation(programID, "vNormal");
+            attribute_vuvs = GL.GetAttribLocation(programID, "vUV");
+            uniform_mview = GL.GetUniformLocation(programID, "transform");
+            texid = GL.GetUniformLocation(programID, "renderedTexture");
+        }
+
 		// loading shaders
 		void Load( String filename, ShaderType type, int program, out int ID )
 		{

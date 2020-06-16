@@ -16,16 +16,19 @@ namespace Template
         Mesh mesh;
         Texture texture, normalMap;
         public Matrix4 localTransform;
-        bool cubemap;
+        cubemap cubemap;
 
-        public ParentMesh(Mesh _mesh, Texture _texture, Matrix4 _localTransform, bool _cubemap = false, Texture _normalMap = null, ParentMesh _parent = null)
+        public ParentMesh(Mesh _mesh, Texture _texture, Matrix4 _localTransform, int _cubemap = 0, Texture _normalMap = null, ParentMesh _parent = null)
         {
             mesh = _mesh;
             texture = _texture;
             localTransform = _localTransform;
             normalMap = _normalMap;
             parent = _parent;
-            cubemap = _cubemap;
+            if (_cubemap != 0)
+            {
+                cubemap = new cubemap(_cubemap);
+            }
         }
 
         //Add child meshes to parent mesh
@@ -34,44 +37,52 @@ namespace Template
             child_meshes.Add(child_mesh);
         }
 
-        public void Render(Matrix4 parentMatrix, Matrix4 camera, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights, ParentMesh parentMesh)
+        public void Render(Matrix4 parentMatrix, Matrix4 camera, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights)
         {
             //Combine matrices
             Matrix4 finalTransform = localTransform * parentMatrix;
 
+            mesh.Render(shader, finalTransform * camera, texture, normalMap, cubemap, pointlights, directionalLights, spotlights);
+
+            //Render child meshes
+            foreach (ParentMesh p in child_meshes)
+            {
+                p.Render(finalTransform, camera, shader, pointlights, directionalLights, spotlights);
+            }
+        }
+
+        public void SimpleRender(Matrix4 parentMatrix, Matrix4 camera, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights, ParentMesh parentMesh)
+        {
+            //Combine matrices
+            Matrix4 finalTransform = localTransform * parentMatrix;
+
+            //dont render the object because it cant reflect/refract itself
             if(parentMesh != this)
             {
-                //if(cubemap)
-                //{
-                //    RenderCubemap(finalTransform.Row3.Xyz, shader);
-                //}
-
-                mesh.Render(shader, finalTransform * camera, texture, normalMap, pointlights, directionalLights, spotlights);
+                mesh.Render(shader, finalTransform * camera, texture, pointlights, directionalLights, spotlights);
             }
 
             //Render child meshes
             foreach (ParentMesh p in child_meshes)
             {
-                p.Render(finalTransform, camera, shader, pointlights, directionalLights, spotlights, parentMesh);
+                p.SimpleRender(finalTransform, camera, shader, pointlights, directionalLights, spotlights, parentMesh);
             }
         }
 
-        public void RenderCubemap(Vector3 transform, Shader shader)
+        public void RenderCubemap(Matrix4 parentMatrix, SceneGraph scene)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, programValues.cubemapbuffer);
-            Matrix4 createCameraview = Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI * 0.5f), 1, 0.1f, 10);
-
-            for(int i = -1; i < 2; i += 2)
+            Matrix4 finalTransform = localTransform * parentMatrix;
+            if (cubemap != null)
             {
-                Matrix4 camera = Matrix4.LookAt(transform, transform + new Vector3(i, 0, 0), Vector3.UnitY);
-                programValues.scene.Render(camera * createCameraview, shader, this);
-                camera = Matrix4.LookAt(transform, transform + new Vector3(0, i, 0), Vector3.UnitY);
-                programValues.scene.Render(camera * createCameraview, shader, this);
-                camera = Matrix4.LookAt(transform, transform + new Vector3(0, 0, i), Vector3.UnitY);
-                programValues.scene.Render(camera * createCameraview, shader, this);
+                Vector3 transform = finalTransform.Row3.Xyz;
+                cubemap.Render(programValues.cubemapshader, transform, scene, this);
+                programValues.cubemap = cubemap.id;
             }
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            foreach (ParentMesh p in child_meshes)
+            {
+                p.RenderCubemap(finalTransform, scene);
+            }
         }
 
         public Matrix4 CalcFinalTransform()

@@ -1,4 +1,4 @@
-﻿#version 420
+#version 420
 
 struct pointlight{
 	vec3 position;
@@ -25,16 +25,12 @@ in vec2 uv;											// interpolated texture coordinates
 in vec4 normal;										// interpolated normal
 in vec3 position;
 layout (binding = 0) uniform sampler2D pixels;		// texture sampler
-layout (binding = 1) uniform sampler2D normalMap;
-layout (binding = 2) uniform samplerCube cubeMap;
 uniform pointlight pointlights[20];
 uniform directionalLight directionalLights[20];
 uniform spotlight spotlights[20];
 uniform int directionalLightCount;
 uniform int pointlightCount;
 uniform int spotlightCount;
-uniform bool isNormalMap;
-uniform int cubeMapType;
 vec3 normalVec;
 vec3 texColor;
 
@@ -51,9 +47,6 @@ void main()
 	normalVec = normal.xyz;
 	vec3 color = vec3(0);
 
-	if(isNormalMap){
-		normalVec *= 2 * texture( normalMap, uv ).xyz - 1;
-	}
 
 	//Directional lights
 	for(int i = 0; i < directionalLightCount; ++i) {
@@ -74,27 +67,11 @@ void main()
 		}
 	}
 
-	if(cubeMapType == 1){
-		vec3 ray = reflect(normalize(position), normalize(normal.xyz));
-		color = texture(cubeMap, ray).xyz;
-	}
-	else if(cubeMapType == 2){
-
-	}
 	outputColor = vec4(color, 1);
 } 
 
 void Phong(in vec3 lightDirection, in float strength, in vec3 color, inout vec3 outColor) {
 	//Diffuse light
 	float angle = max(dot(lightDirection, normalVec), 0);
-
-	//Specular light
-	float specular = 0.0;
-	if(angle > 0) {
-		vec3 reflection = reflect(lightDirection, normalVec);
-		vec3 view = normalize(-position);
-		float specularAngle = max(dot(reflection, view), 0);
-		specular = pow(specularAngle, 40);
-	}	
-	outColor += (texColor * strength + vec3(angle * strength) + vec3(specular * strength)) * color;	
+	outColor += (texColor * strength + vec3(angle * strength)) * color;	
 }
