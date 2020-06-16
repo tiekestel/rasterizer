@@ -28,7 +28,7 @@ namespace Template
 			attribute_vpos = GL.GetAttribLocation( programID, "vPosition" );
 			attribute_vnrm = GL.GetAttribLocation( programID, "vNormal" );
 			attribute_vuvs = GL.GetAttribLocation( programID, "vUV" );
-			uniform_mview = GL.GetUniformLocation( programID, "transform" );
+			uniform_mview = GL.GetUniformLocation( programID, "camera" );
 			texid = GL.GetUniformLocation(programID, "renderedTexture");
 		}
 

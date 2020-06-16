@@ -12,7 +12,7 @@ namespace Template
 
     public class DirectionalLight
     {
-        public Vector4 direction, finalDirection;
+        public Vector4 direction;
         public float strength;
         public Vector3 color;
         public ParentMesh parent;
@@ -24,23 +24,11 @@ namespace Template
             color = _color;
             parent = _parent;
         }
-
-        public void CalcFinalDirection(Matrix4 camera)
-        {
-            if(parent != null)
-            {
-                finalDirection = parent.CalcFinalTransform() * camera.ClearProjection() * direction;
-            }
-            else
-            {
-                finalDirection = camera.ClearProjection() * direction;
-            }
-        }
     }
 
     public class Pointlight
     {
-        public Vector4 position, finalPostion;
+        public Vector4 position;
         public float strength;
         public Vector3 color;
         public ParentMesh parent;
@@ -52,23 +40,11 @@ namespace Template
             color = _color;
             parent = _parent;
         }
-
-        public void CalcFinalPosition(Matrix4 camera)
-        {
-            if(parent != null)
-            {
-                finalPostion = position * parent.CalcFinalTransform() * camera;
-            }
-            else
-            {
-                finalPostion = position * camera;
-            }
-        }
     }
 
     public class Spotlight
     {
-        public Vector4 position, finalPosition, direction, finalDirection;
+        public Vector4 position, direction;
         public float strength;
         public Vector3 color;
         public ParentMesh parent;
@@ -83,21 +59,6 @@ namespace Template
             parent = _parent;
             angle = _angle;
         }
-
-        public void CalcFinal(Matrix4 camera)
-        {
-            if(parent != null)
-            {
-                Matrix4 parentTransform = parent.CalcFinalTransform();
-                finalPosition = parentTransform * camera * position;
-                finalDirection = parentTransform * camera * direction;
-            } 
-            else
-            {
-                finalPosition = position * camera;
-                finalDirection = camera.ClearProjection() * direction;
-            }
-        }
     }
 
     public class SceneGraph
@@ -110,17 +71,17 @@ namespace Template
 
 		public SceneGraph()
 		{
-            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0, new Texture("../../normalMaps/crystal.jpg"));
-            ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 1);
+            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0/*, new Texture("../../normalMaps/crystal.jpg")*/);
+            ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 0);
             primaryMeshes = new List<ParentMesh>();
             primaryMeshes.Add(world);
             primaryMeshes.Add(teapot);
             directionalLights = new List<DirectionalLight>();
-            directionalLights.Add(new DirectionalLight(new Vector4(-1, 1, 0, 1), 0.1f, new Vector3(1, 1, 1), null));
+            directionalLights.Add(new DirectionalLight(new Vector4(-1, 1, 0, 1), 1, new Vector3(1, 1, 1), null));
             pointlights = new List<Pointlight>();
-            pointlights.Add(new Pointlight(new Vector4(0, 1, 0, 1), 50, new Vector3(1, 0, 0), null));
+            pointlights.Add(new Pointlight(new Vector4(5, 8, 0, 1), 50, new Vector3(1, 1, 1), null));
             spotlights = new List<Spotlight>();
-            spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0, -1, 0, 1), 100, new Vector3(0, 0, 1), null, 0.8f));
+            spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
             float[] skyboxVertices = new float[] {
 				// positions          
 				-1.0f,  1.0f, -1.0f,
@@ -188,49 +149,33 @@ namespace Template
             }
         }
 
-		public void Render(Matrix4 camera, Shader shader)
+		public void Render(Matrix4 camera, Matrix4 cameraPosition, Shader shader)
 		{
             //move lights to camera space
-            foreach(DirectionalLight d in directionalLights)
-            {
-                d.CalcFinalDirection(camera);
-            }
+            //foreach(DirectionalLight d in directionalLights)
+            //{
+            //    d.CalcFinalDirection(camera);
+            //}
 
-            foreach(Pointlight p in pointlights)
-            {
-                p.CalcFinalPosition(camera);
-            }
+            //foreach(Pointlight p in pointlights)
+            //{
+            //    p.CalcFinalPosition(camera);
+            //}
 
-            foreach(Spotlight s in spotlights)
-            {
-                s.CalcFinal(camera);
-            }
+            //foreach(Spotlight s in spotlights)
+            //{
+            //    s.CalcFinal(camera);
+            //}
 
             foreach(ParentMesh p in primaryMeshes)
             {
-                p.Render(Matrix4.Identity, camera, shader, pointlights, directionalLights, spotlights);
+                p.Render(Matrix4.Identity, camera, cameraPosition, shader, pointlights, directionalLights, spotlights);
             }
 
 		}
 
         public void SimpleRender(Matrix4 camera, Shader shader, ParentMesh parentMesh)
         {
-            //move lights to camera space
-            foreach (DirectionalLight d in directionalLights)
-            {
-                d.CalcFinalDirection(camera);
-            }
-
-            foreach (Pointlight p in pointlights)
-            {
-                p.CalcFinalPosition(camera);
-            }
-
-            foreach (Spotlight s in spotlights)
-            {
-                s.CalcFinal(camera);
-            }
-
             foreach(ParentMesh p in primaryMeshes)
             {
                 p.SimpleRender(Matrix4.Identity, camera, shader, pointlights, directionalLights, spotlights, parentMesh);
@@ -250,7 +195,7 @@ namespace Template
 
 
             GL.Enable(EnableCap.DepthTest);
-            Render(cameraPosition * cameraRotation * cameraFOV, shader);
+            Render(cameraPosition * cameraRotation * cameraFOV, cameraPosition, shader);
             RenderSkyBox(cameraPosition, cameraRotation, cameraFOV, programValues.skyboxshader);
             //RenderCubeMap(cameraPosition, cameraRotation, cameraFOV, programValues.skyboxshader);
             GL.UseProgram(0);

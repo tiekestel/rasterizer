@@ -49,7 +49,7 @@ namespace Template
 		}
 
 		// render the mesh using the supplied shader and matrix
-		public void Render( Shader shader, Matrix4 transform, Texture texture, Texture normalMap, cubemap cubemap, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights )
+		public void Render( Shader shader, Matrix4 transform, Matrix4 camera, Matrix4 cameraPosition, Texture texture, Texture normalMap, cubemap cubemap, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights )
 		{
 			// on first run, prepare buffers
 			Prepare( shader );
@@ -85,8 +85,11 @@ namespace Template
             // enable shader
             GL.UseProgram( shader.programID );
 
-            // pass transform to vertex shader
-			GL.UniformMatrix4( shader.uniform_mview, false, ref transform );
+			// pass transform to vertex shader
+			int tr = GL.GetUniformLocation(shader.programID, "transform");
+			GL.UniformMatrix4( tr, false, ref transform );
+			GL.UniformMatrix4( shader.uniform_mview, false, ref camera );
+			GL.Uniform4(GL.GetUniformLocation(shader.programID, "viewPos"), cameraPosition.Row3);
 
             int isNormal = GL.GetUniformLocation(shader.programID, "isNormalMap");
             if(normalMap != null)
@@ -114,7 +117,7 @@ namespace Template
                 int direction = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].direction");
                 int color = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].strength");
-                GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].finalDirection.Xyz));
+                GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].direction.Xyz));
                 GL.Uniform3(color, directionalLights[i].color);
                 GL.Uniform1(strength, directionalLights[i].strength);
             }
@@ -127,7 +130,7 @@ namespace Template
                 int position = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].position");
                 int color = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].strength");
-                GL.Uniform3(position, pointlights[i].finalPostion.Xyz);
+                GL.Uniform3(position, pointlights[i].position.Xyz);
                 GL.Uniform3(color, pointlights[i].color);
                 GL.Uniform1(strength, pointlights[i].strength);
             }
@@ -142,8 +145,8 @@ namespace Template
                 int color = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].strength");
                 int angle = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].angle");
-                GL.Uniform3(position, spotlights[i].finalPosition.Xyz);
-                GL.Uniform3(direction, Vector3.Normalize(spotlights[i].finalDirection.Xyz));
+                GL.Uniform3(position, spotlights[i].position.Xyz);
+                GL.Uniform3(direction, Vector3.Normalize(spotlights[i].direction.Xyz));
                 GL.Uniform3(color, spotlights[i].color);
                 GL.Uniform1(strength, spotlights[i].strength);
                 GL.Uniform1(angle, spotlights[i].angle);
@@ -208,7 +211,7 @@ namespace Template
                 int direction = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].direction");
                 int color = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].strength");
-                GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].finalDirection.Xyz));
+                GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].direction.Xyz));
                 GL.Uniform3(color, directionalLights[i].color);
                 GL.Uniform1(strength, directionalLights[i].strength);
             }
@@ -221,7 +224,7 @@ namespace Template
                 int position = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].position");
                 int color = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].strength");
-                GL.Uniform3(position, pointlights[i].finalPostion.Xyz);
+                GL.Uniform3(position, pointlights[i].position.Xyz);
                 GL.Uniform3(color, pointlights[i].color);
                 GL.Uniform1(strength, pointlights[i].strength);
             }
@@ -236,8 +239,8 @@ namespace Template
                 int color = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].strength");
                 int angle = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].angle");
-                GL.Uniform3(position, spotlights[i].finalPosition.Xyz);
-                GL.Uniform3(direction, Vector3.Normalize(spotlights[i].finalDirection.Xyz));
+                GL.Uniform3(position, spotlights[i].position.Xyz);
+                GL.Uniform3(direction, Vector3.Normalize(spotlights[i].direction.Xyz));
                 GL.Uniform3(color, spotlights[i].color);
                 GL.Uniform1(strength, spotlights[i].strength);
                 GL.Uniform1(angle, spotlights[i].angle);

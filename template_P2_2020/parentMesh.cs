@@ -37,17 +37,17 @@ namespace Template
             child_meshes.Add(child_mesh);
         }
 
-        public void Render(Matrix4 parentMatrix, Matrix4 camera, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights)
+        public void Render(Matrix4 parentMatrix, Matrix4 camera, Matrix4 cameraPosition, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights)
         {
             //Combine matrices
             Matrix4 finalTransform = localTransform * parentMatrix;
 
-            mesh.Render(shader, finalTransform * camera, texture, normalMap, cubemap, pointlights, directionalLights, spotlights);
+            mesh.Render(shader, finalTransform, camera, cameraPosition, texture, normalMap, cubemap, pointlights, directionalLights, spotlights);
 
             //Render child meshes
             foreach (ParentMesh p in child_meshes)
             {
-                p.Render(finalTransform, camera, shader, pointlights, directionalLights, spotlights);
+                p.Render(finalTransform, camera, cameraPosition, shader, pointlights, directionalLights, spotlights);
             }
         }
 
