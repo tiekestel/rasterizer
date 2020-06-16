@@ -24,6 +24,7 @@ struct spotlight {
 in vec2 uv;											// interpolated texture coordinates
 in vec4 normal;										// interpolated normal
 in vec3 position;
+in mat3 TBN;
 layout (binding = 0) uniform sampler2D pixels;		// texture sampler
 layout (binding = 1) uniform sampler2D normalMap;
 layout (binding = 2) uniform samplerCube cubeMap;
@@ -50,9 +51,13 @@ void main()
 {
 	viewDirection = normalize(position - viewPos.xyz);
     texColor = texture( pixels, uv ).xyz;
-	normalVec = normalize(normal.xyz);
+	
 	if(isNormalMap){
-		normalVec = normalize(2 * texture( normalMap, uv ).xyz - 1);
+		normalVec = 2 * texture( normalMap, uv ).xyz - 1;
+		normalVec = TBN * normalVec;
+	}
+	else{
+		normalVec = normalize(normal.xyz);
 	}
 	vec3 color = vec3(0);
 
@@ -82,6 +87,7 @@ void main()
 
 	}
 	outputColor = vec4(color, 1);
+	
 } 
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color) {

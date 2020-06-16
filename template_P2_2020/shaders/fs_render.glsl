@@ -13,7 +13,7 @@ void main() {
 	vec3 hdrColor = texture(hdrTexture, Texcoords).rgb;
 	color += hdrColor;
 	color = vec3(1) - exp(-color * 1);
-	color = pow(color, vec3(1 / 2.2));
+	color = pow(color, vec3(1 / 1.2));
 	color -= vec3(vignet * vignet);
 	outputColor = vec4(color, 1);
 }

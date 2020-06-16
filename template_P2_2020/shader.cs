@@ -11,6 +11,8 @@ namespace Template
 		public int attribute_vpos;
 		public int attribute_vnrm;
 		public int attribute_vuvs;
+		public int attribute_vtan;
+		public int attribute_vbit;
 		public int uniform_mview;
 		public int texid;
 
@@ -27,7 +29,9 @@ namespace Template
 			// get locations of shader parameters
 			attribute_vpos = GL.GetAttribLocation( programID, "vPosition" );
 			attribute_vnrm = GL.GetAttribLocation( programID, "vNormal" );
-			attribute_vuvs = GL.GetAttribLocation( programID, "vUV" );
+			attribute_vuvs = GL.GetAttribLocation( programID, "vUV");
+			attribute_vtan = GL.GetAttribLocation( programID, "vTangent");
+			attribute_vbit = GL.GetAttribLocation( programID, "vBitangent");
 			uniform_mview = GL.GetUniformLocation( programID, "camera" );
 			texid = GL.GetUniformLocation(programID, "renderedTexture");
 		}

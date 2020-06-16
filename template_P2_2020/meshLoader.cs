@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Collections.Generic;
 using OpenTK;
+using System.Runtime.InteropServices;
 
 namespace Template
 {
@@ -30,6 +31,14 @@ namespace Template
 		List<Mesh.ObjVertex> objVertices;
 		List<Mesh.ObjTriangle> objTriangles;
 		List<Mesh.ObjQuad> objQuads;
+
+
+        struct SVertex
+        {
+            public Vector2 TexCoord;
+            public Vector3 Normal;
+            public Vector3 Vertex;
+        }
 
 		void Load( Mesh mesh, TextReader textReader )
 		{
@@ -88,6 +97,10 @@ namespace Template
 					break;
 				}
 			}
+            foreach(Mesh.ObjTriangle t in objTriangles)
+            {
+                SetTBN(t.Index0, t.Index1, t.Index2);
+            }
 			mesh.vertices = objVertices.ToArray();
 			mesh.triangles = objTriangles.ToArray();
 			mesh.quads = objQuads.ToArray();
@@ -100,7 +113,8 @@ namespace Template
 		}
 
 		char[] faceParamaterSplitter = new char[] { '/' };
-		int ParseFaceParameter( string faceParameter )
+		
+        int ParseFaceParameter( string faceParameter )
 		{
 			Vector3 vertex = new Vector3();
 			Vector2 texCoord = new Vector2();
@@ -136,5 +150,30 @@ namespace Template
 			objVertices.Add( newObjVertex );
 			return objVertices.Count - 1;
 		}
+
+        void SetTBN(int vertex1, int vertex2, int vertex3)
+        {
+            Mesh.ObjVertex v1 = objVertices[vertex1];
+            Mesh.ObjVertex v2 = objVertices[vertex2];
+            Mesh.ObjVertex v3 = objVertices[vertex3];
+            Vector2 dUV1 = v2.TexCoord - v1.TexCoord;
+            Vector2 dUV2 = v3.TexCoord - v1.TexCoord;
+            Vector3 dPos1 = v2.Vertex - v1.Vertex;
+            Vector3 dPos2 = v3.Vertex - v1.Vertex;
+
+            float r = 1 / (dUV1.X * dUV2.Y - dUV1.Y * dUV2.X);
+            Vector3 tangent = (dPos1 * dUV2.Y - dPos2 * dUV1.Y) * r;
+            Vector3 bitangent = (dPos2 * dUV1.X - dPos1 * dUV2.X) * r;
+            v1.Tangent = tangent;
+            v1.Bitangent = bitangent;
+            v2.Tangent = tangent;
+            v2.Bitangent = bitangent;
+            v3.Tangent = tangent;
+            v3.Bitangent = bitangent;
+
+            objVertices[vertex1] = v1;
+            objVertices[vertex2] = v2;
+            objVertices[vertex3] = v3;
+        }
 	}
 }

@@ -71,7 +71,7 @@ namespace Template
 
 		public SceneGraph()
 		{
-            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0/*, new Texture("../../normalMaps/crystal.jpg")*/);
+            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0, new Texture("../../normalMaps/crystal.jpg"));
             ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 0);
             primaryMeshes = new List<ParentMesh>();
             primaryMeshes.Add(world);
