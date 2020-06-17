@@ -16,6 +16,7 @@ namespace Template
         public float strength;
         public Vector3 color;
         public ParentMesh parent;
+        public depthmap shadowMap;
 
         public DirectionalLight(Vector4 _direction, float _strength, Vector3 _color, ParentMesh _parent)
         {
@@ -23,6 +24,7 @@ namespace Template
             strength = _strength;
             color = _color;
             parent = _parent;
+            shadowMap = new depthmap(this);
         }
     }
 
@@ -71,17 +73,17 @@ namespace Template
 
 		public SceneGraph()
 		{
-            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0, new Texture("../../normalMaps/crystal.jpg"));
+            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0/*, new Texture("../../normalMaps/crystal.jpg")*/);
             ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 0);
             primaryMeshes = new List<ParentMesh>();
             primaryMeshes.Add(world);
             primaryMeshes.Add(teapot);
             directionalLights = new List<DirectionalLight>();
-            directionalLights.Add(new DirectionalLight(new Vector4(-1, 1, 0, 1), 1, new Vector3(1, 1, 1), null));
+            directionalLights.Add(new DirectionalLight(new Vector4(-1f, 1, 0, 1), 1, new Vector3(1, 1, 1), null));
             pointlights = new List<Pointlight>();
-            pointlights.Add(new Pointlight(new Vector4(5, 8, 0, 1), 50, new Vector3(1, 1, 1), null));
+            //pointlights.Add(new Pointlight(new Vector4(0, 0, 0, 1), 50, new Vector3(1, 1, 1), null));
             spotlights = new List<Spotlight>();
-            spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
+            //spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
             float[] skyboxVertices = new float[] {
 				// positions          
 				-1.0f,  1.0f, -1.0f,
@@ -167,24 +169,27 @@ namespace Template
             //    s.CalcFinal(camera);
             //}
 
-            foreach(ParentMesh p in primaryMeshes)
+            foreach (ParentMesh p in primaryMeshes)
             {
                 p.Render(Matrix4.Identity, camera, cameraPosition, shader, pointlights, directionalLights, spotlights);
             }
 
 		}
 
-        public void SimpleRender(Matrix4 camera, Shader shader, ParentMesh parentMesh)
+        public void SimpleRender(Matrix4 camera, Matrix4 cameraPosition, Shader shader, ParentMesh parentMesh = null)
         {
             foreach(ParentMesh p in primaryMeshes)
             {
-                p.SimpleRender(Matrix4.Identity, camera, shader, pointlights, directionalLights, spotlights, parentMesh);
+                p.SimpleRender(Matrix4.Identity, camera, cameraPosition, shader, pointlights, directionalLights, spotlights, parentMesh);
             }
         }
 
         public void FullRender(Matrix4 cameraPosition, Matrix4 cameraRotation, Matrix4 cameraFOV, Shader shader, int framebuffer)
         {
-
+            foreach (DirectionalLight d in directionalLights)
+            {
+                d.shadowMap.Render(programValues.depthmapshader, this);
+            }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
             GL.UseProgram(shader.programID);
@@ -218,26 +223,6 @@ namespace Template
             GL.DepthFunc(DepthFunction.Less);
             GL.Disable(EnableCap.DepthTest);
         }
-
-        public void RenderCubeMap(Matrix4 cameraPosition, Matrix4 cameraRotation, Matrix4 cameraFOV, Shader skyboxshader)
-        {
-            //skybox
-            GL.DepthFunc(DepthFunction.Lequal);
-            GL.EnableVertexAttribArray(2);
-            GL.Enable(EnableCap.TextureCubeMap);
-            GL.UseProgram(skyboxshader.programID);
-            GL.BindVertexArray(skyboxbuffer);
-            GL.UniformMatrix4(GL.GetUniformLocation(skyboxshader.programID, "view"), false, ref cameraRotation);
-            GL.UniformMatrix4(GL.GetUniformLocation(skyboxshader.programID, "projection"), false, ref cameraFOV);
-            GL.BindTexture(TextureTarget.TextureCubeMap, programValues.cubemap);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
-            GL.DisableVertexAttribArray(2);
-            GL.Disable(EnableCap.TextureCubeMap);
-            GL.DepthFunc(DepthFunction.Less);
-            GL.Disable(EnableCap.DepthTest);
-
-        }
-
         int LoadCubemap(string[] faces)
         {
             int textureID = GL.GenTexture();

@@ -10,6 +10,8 @@ struct directionalLight{
 	vec3 direction;
 	float strength;
 	vec3 color;
+	mat4 lightSpace;
+	sampler2D shadowMap;
 };
  
 struct spotlight {
@@ -42,16 +44,17 @@ vec3 texColor;
 vec3 viewDirection;
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color);
-
+bool Shadow(vec4 positionLightspace, directionalLight d);
 // shader output
 layout(location = 0) out vec4 outputColor;
 
 // fragment shader
 void main()
 {
-	viewDirection = normalize(position - viewPos.xyz);
+	viewDirection = normalize(position -vec3(-viewPos.x, viewPos.y, -viewPos.z));
+	viewDirection.y *= -1;
     texColor = texture( pixels, uv ).xyz;
-	
+
 	if(isNormalMap){
 		normalVec = 2 * texture( normalMap, uv ).xyz - 1;
 		normalVec = TBN * normalVec;
@@ -59,10 +62,15 @@ void main()
 	else{
 		normalVec = normalize(normal.xyz);
 	}
-	vec3 color = vec3(0);
+	vec3 color = texColor * 0.15;
 
 	for(int i = 0; i < directionalLightCount; ++i) {
-		Phong(normalize(directionalLights[i].direction), normalVec, directionalLights[i].strength, directionalLights[i].color, color);
+		if(Shadow(directionalLights[i].lightSpace * vec4(position,1),directionalLights[i])){
+			Phong(normalize(directionalLights[i].direction), normalVec, directionalLights[i].strength, directionalLights[i].color, color);
+		}
+		else{
+			color = vec3(1);
+		}
 	}
 
 	for(int i = 0; i < pointlightCount; ++i) {
@@ -81,19 +89,34 @@ void main()
 
 	if(cubeMapType == 1){
 		vec3 ray = reflect(viewDirection, normalVec);
-		color += texture(cubeMap, ray).xyz;
+		color *= 0.5;
+		color += texture(cubeMap, ray).xyz * 0.5;
 	}
 	else if(cubeMapType == 2){
 
 	}
 	outputColor = vec4(color, 1);
 	
+//	float value = texture(directionalLights[0].shadowMap, uv).r;
+//	outputColor = vec4(vec3(value),1);
+
 } 
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color) {
 	float diffuse = max(dot(normalVec, lightDirection), 0);
-	vec3 reflectDirection = reflect(-lightDirection, normalVec);
-	float specular = pow(max(dot(viewDirection, reflectDirection), 0), 32);
+	vec3 reflectDirection = reflect(viewDirection, normalVec);
+	float specular = 0;
+	if(dot(lightDirection, reflectDirection) > 0){
+		specular = pow(max(dot(lightDirection, reflectDirection), 0), 32);
+	}
 	color += (texColor * (diffuse + specular) * lightColor) * strength;
+}
+
+bool Shadow(vec4 positionLightspace, directionalLight d){
+	vec3 projCoord = positionLightspace.xyz / positionLightspace.w;
+	projCoord = projCoord *0.5 + 0.5;
+	float mapdepth = texture(d.shadowMap,projCoord.xy).r;
+	float depth = projCoord.z;
+	return depth > mapdepth;
 }
 

@@ -32,9 +32,11 @@ namespace Template
 			shader = new Shader( "../../shaders/vs.glsl", "../../shaders/fs.glsl" );
 			postproc = new Shader( "../../shaders/vs_post.glsl", "../../shaders/fs_post.glsl" );
 			rendershader = new Shader( "../../shaders/vs_render.glsl", "../../shaders/fs_render.glsl" );
+			//rendershader = new Shader( "../../shaders/vs_render.glsl", "../../shaders/fs_renderDepthmap.glsl" );
 
 			programValues.skyboxshader = new Shader( "../../shaders/vs_skybox.glsl", "../../shaders/fs_skybox.glsl" );
             programValues.cubemapshader = new Shader("../../shaders/vs_cubemap.glsl", "../../shaders/fs_cubemap.glsl");
+            programValues.depthmapshader = new Shader("../../shaders/vs_depthmap.glsl", "../../shaders/fs_depthmap.glsl");
 
 			// create the render target
 			target = new RenderTarget( screen.width, screen.height );
@@ -183,20 +185,44 @@ namespace Template
 			GL.DisableVertexAttribArray(1);
 			GL.Disable(EnableCap.Texture2D);
 
-			//Render
-			GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
+
+            //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            //GL.Clear(ClearBufferMask.DepthBufferBit);
+            //GL.Clear(ClearBufferMask.ColorBufferBit);
+            //GL.ClearColor(Color.Black);
+            //GL.EnableVertexAttribArray(0);
+            //GL.EnableVertexAttribArray(1);
+            //GL.Enable(EnableCap.Texture2D);
+            //GL.ActiveTexture(TextureUnit.Texture1);
+            //GL.BindTexture(TextureTarget.Texture2D, programValues.shadowmap);
+
+            //GL.UseProgram(rendershader.programID);
+
+            //GL.BindVertexArray(quadVertexbuffer);
+            //GL.BindVertexArray(quadTexbuffer);
+            //GL.Disable(EnableCap.DepthTest);
+            //GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            //GL.UseProgram(0);
+            //GL.DisableVertexAttribArray(0);
+            //GL.DisableVertexAttribArray(1);
+            //GL.Disable(EnableCap.Texture2D);
+
+
+            //Render
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Clear(ClearBufferMask.DepthBufferBit);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             GL.ClearColor(Color.Black);
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
             GL.Enable(EnableCap.Texture2D);
-			GL.ActiveTexture(TextureUnit.Texture1);
-			GL.BindTexture(TextureTarget.Texture2D, colorbuffer);
-			GL.ActiveTexture(TextureUnit.Texture2);
-			GL.BindTexture(TextureTarget.Texture2D, hdrColorbuffer);
+            GL.ActiveTexture(TextureUnit.Texture1);
+            GL.BindTexture(TextureTarget.Texture2D, colorbuffer);
+            GL.ActiveTexture(TextureUnit.Texture2);
+            GL.BindTexture(TextureTarget.Texture2D, hdrColorbuffer);
 
-			GL.UseProgram(rendershader.programID);
+            GL.UseProgram(rendershader.programID);
 
             GL.BindVertexArray(quadVertexbuffer);
             GL.BindVertexArray(quadTexbuffer);

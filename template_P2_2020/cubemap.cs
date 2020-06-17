@@ -67,12 +67,10 @@ namespace Template
                 GL.Clear(ClearBufferMask.DepthBufferBit);
                 GL.ClearColor(0, 0, 0, 0);
                 scene.RenderSkyBox(cameraPosition, cameraRotations[i], cameraFOV, programValues.skyboxshader);    
-                scene.SimpleRender(cameraPosition * cameraRotations[i] * cameraFOV, programValues.cubemapshader, parent);
+                scene.SimpleRender(cameraRotations[i] * cameraFOV, cameraPosition, programValues.cubemapshader, parent);
             }
             GL.Disable(EnableCap.DepthTest);
             GL.Viewport(0, 0, programValues.screenwidth, programValues.screenheight);
-
-            programValues.cubemap = id;
         }
     }
 }

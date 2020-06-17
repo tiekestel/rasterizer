@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="cubemap.cs" />
+    <Compile Include="depthmap.cs" />
     <Compile Include="mesh.cs" />
     <Compile Include="meshLoader.cs" />
     <Compile Include="MyApplication.cs" />

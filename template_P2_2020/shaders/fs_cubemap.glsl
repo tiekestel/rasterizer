@@ -28,13 +28,15 @@ layout (binding = 0) uniform sampler2D pixels;		// texture sampler
 uniform pointlight pointlights[20];
 uniform directionalLight directionalLights[20];
 uniform spotlight spotlights[20];
-uniform int directionalLightCount;
 uniform int pointlightCount;
+uniform int directionalLightCount;
 uniform int spotlightCount;
+uniform vec4 viewPos;
 vec3 normalVec;
 vec3 texColor;
+vec3 viewDirection;
 
-void Phong(in vec3 lightDirection, in float strength, in vec3 color, inout vec3 outColor);
+void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color);
 
 // shader output
 layout(location = 0) out vec4 outputColor;
@@ -42,36 +44,39 @@ layout(location = 0) out vec4 outputColor;
 // fragment shader
 void main()
 {
-    //Ambient light
+	viewDirection = normalize(position - viewPos.xyz);
     texColor = texture( pixels, uv ).xyz;
-	normalVec = normal.xyz;
+	
+
+	normalVec = normalize(normal.xyz);
+
 	vec3 color = vec3(0);
 
-
-	//Directional lights
 	for(int i = 0; i < directionalLightCount; ++i) {
-		Phong(directionalLights[i].direction, directionalLights[i].strength, directionalLights[i].color, color);
+		Phong(normalize(directionalLights[i].direction), normalVec, directionalLights[i].strength, directionalLights[i].color, color);
 	}
 
-	//Pointlights
 	for(int i = 0; i < pointlightCount; ++i) {
 		vec3 lightDirection = pointlights[i].position - position;
-		Phong(normalize(lightDirection), pointlights[i].strength / (12.456 * length(lightDirection) * length(lightDirection)), pointlights[i].color, color);
+		float strength = pointlights[i].strength / (length(lightDirection) * length(lightDirection));
+		lightDirection = normalize(lightDirection);
+		Phong(lightDirection, normalVec, strength, pointlights[i].color, color);
 	}
 
-	//Spotlights
 	for(int i = 0; i < spotlightCount; ++i) {
 		vec3 lightDirection = spotlights[i].position - position;
 		if(dot(normalize(lightDirection), -spotlights[i].direction) > spotlights[i].angle) {
-			Phong(normalize(lightDirection), spotlights[i].strength / (12.456 * length(lightDirection) * length(lightDirection)), spotlights[i].color, color);
+			Phong(normalize(lightDirection), normalVec, spotlights[i].strength / (length(lightDirection) * length(lightDirection)), spotlights[i].color, color); 
 		}
 	}
-
 	outputColor = vec4(color, 1);
+	
 } 
 
-void Phong(in vec3 lightDirection, in float strength, in vec3 color, inout vec3 outColor) {
-	//Diffuse light
-	float angle = max(dot(lightDirection, normalVec), 0);
-	outColor += (texColor * strength + vec3(angle * strength)) * color;	
+void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color) {
+	float diffuse = max(dot(normalVec, lightDirection), 0);
+	vec3 reflectDirection = reflect(-lightDirection, normalVec);
+	float specular = pow(max(dot(viewDirection, reflectDirection), 0), 32);
+	color += (texColor * (diffuse + specular) * lightColor) * strength;
 }
+

@@ -51,7 +51,7 @@ namespace Template
             }
         }
 
-        public void SimpleRender(Matrix4 parentMatrix, Matrix4 camera, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights, ParentMesh parentMesh)
+        public void SimpleRender(Matrix4 parentMatrix, Matrix4 camera, Matrix4 cameraPosition, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights, ParentMesh parentMesh)
         {
             //Combine matrices
             Matrix4 finalTransform = localTransform * parentMatrix;
@@ -59,13 +59,13 @@ namespace Template
             //dont render the object because it cant reflect/refract itself
             if(parentMesh != this)
             {
-                mesh.Render(shader, finalTransform * camera, texture, pointlights, directionalLights, spotlights);
+                mesh.Render(shader, finalTransform, camera, cameraPosition, texture, pointlights, directionalLights, spotlights);
             }
 
             //Render child meshes
             foreach (ParentMesh p in child_meshes)
             {
-                p.SimpleRender(finalTransform, camera, shader, pointlights, directionalLights, spotlights, parentMesh);
+                p.SimpleRender(finalTransform, camera, cameraPosition, shader, pointlights, directionalLights, spotlights, parentMesh);
             }
         }
 
@@ -76,7 +76,6 @@ namespace Template
             {
                 Vector3 transform = finalTransform.Row3.Xyz;
                 cubemap.Render(programValues.cubemapshader, transform, scene, this);
-                programValues.cubemap = cubemap.id;
             }
 
             foreach (ParentMesh p in child_meshes)

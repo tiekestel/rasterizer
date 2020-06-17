@@ -57,28 +57,7 @@ namespace Template
 			// safety dance
 			GL.PushClientAttrib( ClientAttribMask.ClientVertexArrayBit );
             // enable normal map
-            if (normalMap != null)
-            {
-                int normalLoc = GL.GetUniformLocation(shader.programID, "normalMap");
-                GL.Uniform1(normalLoc, 1);
-                GL.ActiveTexture(TextureUnit.Texture1);
-                GL.BindTexture(TextureTarget.Texture2D, normalMap.id);
-            }
 
-            if (cubemap != null)
-            {
-                int cubeLoc = GL.GetUniformLocation(shader.programID, "cubeMap");
-                GL.Uniform1(cubeLoc, 2);
-                GL.ActiveTexture(TextureUnit.Texture2);
-                GL.BindTexture(TextureTarget.TextureCubeMap, cubemap.id);
-            }
-
-
-			// enable texture
-			int texLoc = GL.GetUniformLocation( shader.programID, "pixels" );
-			GL.Uniform1( texLoc, 0 );
-			GL.ActiveTexture( TextureUnit.Texture0 );
-			GL.BindTexture( TextureTarget.Texture2D, texture.id );
 
 
 
@@ -120,6 +99,12 @@ namespace Template
                 GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].direction.Xyz));
                 GL.Uniform3(color, directionalLights[i].color);
                 GL.Uniform1(strength, directionalLights[i].strength);
+                int map = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].shadowMap");
+                GL.Uniform1(map, 3 + i);
+                GL.ActiveTexture(TextureUnit.Texture3 + i);
+                GL.BindTexture(TextureTarget.Texture2D, directionalLights[i].shadowMap.id);
+                int mat = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].lightSpace");
+                GL.ProgramUniformMatrix4(shader.programID, mat, false, ref directionalLights[i].shadowMap.camera);
             }
             int location = GL.GetUniformLocation(shader.programID, "directionalLightCount");
             GL.Uniform1(location, directionalLights.Count);
@@ -154,6 +139,28 @@ namespace Template
             location = GL.GetUniformLocation(shader.programID, "spotlightCount");
             GL.Uniform1(location, spotlights.Count);
 
+            if (normalMap != null)
+            {
+                int normalLoc = GL.GetUniformLocation(shader.programID, "normalMap");
+                GL.Uniform1(normalLoc, 1);
+                GL.ActiveTexture(TextureUnit.Texture1);
+                GL.BindTexture(TextureTarget.Texture2D, normalMap.id);
+            }
+
+            if (cubemap != null)
+            {
+                int cubeLoc = GL.GetUniformLocation(shader.programID, "cubeMap");
+                GL.Uniform1(cubeLoc, 2);
+                GL.ActiveTexture(TextureUnit.Texture2);
+                GL.BindTexture(TextureTarget.TextureCubeMap, cubemap.id);
+            }
+
+
+            // enable texture
+            int texLoc = GL.GetUniformLocation(shader.programID, "pixels");
+            GL.Uniform1(texLoc, 0);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, texture.id);
 
             // enable position, normal and uv attributes
             GL.EnableVertexAttribArray( shader.attribute_vpos );
@@ -174,10 +181,6 @@ namespace Template
             GL.VertexAttribPointer(shader.attribute_vtan, 3, VertexAttribPointerType.Float, false, 56, 8 * 4);
             GL.VertexAttribPointer(shader.attribute_vbit, 3, VertexAttribPointerType.Float, false, 56, 11 * 4);
 
-            Matrix3 TBN = new Matrix3(vertices[0].Tangent, vertices[0].Bitangent, vertices[0].Normal);
-            Vector3 normal = new Vector3(0, 1, 0);
-            normal = TBN * normal;
-
 
 			// bind triangle index data and render
 			GL.BindBuffer( BufferTarget.ElementArrayBuffer, triangleBufferId );
@@ -193,26 +196,32 @@ namespace Template
 			// restore previous OpenGL state
 			GL.UseProgram( 0 );
 			GL.PopClientAttrib();
-		}		
-        public void Render( Shader shader, Matrix4 transform, Texture texture, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights )
-		{
-			// on first run, prepare buffers
-			Prepare( shader );
+		}
+        public void Render(Shader shader, Matrix4 transform, Matrix4 camera, Matrix4 cameraPosition, Texture texture, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights)
+        {
+            // on first run, prepare buffers
+            Prepare(shader);
 
-			// safety dance
-			GL.PushClientAttrib( ClientAttribMask.ClientVertexArrayBit );
+            // safety dance
+            GL.PushClientAttrib(ClientAttribMask.ClientVertexArrayBit);
 
-			// enable texture
-			int texLoc = GL.GetUniformLocation( shader.programID, "pixels" );
-			GL.Uniform1( texLoc, 0 );
-			GL.ActiveTexture( TextureUnit.Texture0 );
-			GL.BindTexture( TextureTarget.Texture2D, texture.id );
+
+            // enable texture
+            int texLoc = GL.GetUniformLocation(shader.programID, "pixels");
+            GL.Uniform1(texLoc, 0);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, texture.id);
+
+
 
             // enable shader
-            GL.UseProgram( shader.programID );
+            GL.UseProgram(shader.programID);
 
             // pass transform to vertex shader
-			GL.UniformMatrix4( shader.uniform_mview, false, ref transform );
+            int tr = GL.GetUniformLocation(shader.programID, "transform");
+            GL.UniformMatrix4(tr, false, ref transform);
+            GL.UniformMatrix4(shader.uniform_mview, false, ref camera);
+            GL.Uniform4(GL.GetUniformLocation(shader.programID, "viewPos"), cameraPosition.Row3);
 
             //Directional lights
             for (int i = 0; i < directionalLights.Count; ++i)
@@ -220,13 +229,13 @@ namespace Template
                 int direction = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].direction");
                 int color = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].strength");
-                GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].direction.Xyz));
+                GL.Uniform3(direction, Vector3.Normalize(new Vector3(-directionalLights[i].direction.X, directionalLights[i].direction.Y, directionalLights[i].direction.Z)));
                 GL.Uniform3(color, directionalLights[i].color);
                 GL.Uniform1(strength, directionalLights[i].strength);
             }
             int location = GL.GetUniformLocation(shader.programID, "directionalLightCount");
             GL.Uniform1(location, directionalLights.Count);
-            
+
             //Pointlights
             for (int i = 0; i < pointlights.Count; ++i)
             {
@@ -259,38 +268,39 @@ namespace Template
 
 
             // enable position, normal and uv attributes
-            GL.EnableVertexAttribArray( shader.attribute_vpos );
-			GL.EnableVertexAttribArray( shader.attribute_vnrm );
-			GL.EnableVertexAttribArray( shader.attribute_vuvs );
+            GL.EnableVertexAttribArray(shader.attribute_vpos);
+            GL.EnableVertexAttribArray(shader.attribute_vnrm);
+            GL.EnableVertexAttribArray(shader.attribute_vuvs);
 
-			// bind interleaved vertex data
-			GL.EnableClientState( ArrayCap.VertexArray );
-			GL.BindBuffer( BufferTarget.ArrayBuffer, vertexBufferId );
-			GL.InterleavedArrays( InterleavedArrayFormat.T2fN3fV3f, Marshal.SizeOf( typeof( ObjVertex ) ), IntPtr.Zero );
+            // bind interleaved vertex data
+            GL.EnableClientState(ArrayCap.VertexArray);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferId);
+            GL.InterleavedArrays(InterleavedArrayFormat.T2fN3fV3f, Marshal.SizeOf(typeof(ObjVertex)), IntPtr.Zero);
 
-			// link vertex attributes to shader parameters 
-			GL.VertexAttribPointer( shader.attribute_vuvs, 2, VertexAttribPointerType.Float, false, 56, 0 );
-			GL.VertexAttribPointer( shader.attribute_vnrm, 3, VertexAttribPointerType.Float, true, 56, 2 * 4 );
-			GL.VertexAttribPointer( shader.attribute_vpos, 3, VertexAttribPointerType.Float, false, 56, 5 * 4 );
+            // link vertex attributes to shader parameters 
+            GL.VertexAttribPointer(shader.attribute_vuvs, 2, VertexAttribPointerType.Float, false, 56, 0);
+            GL.VertexAttribPointer(shader.attribute_vnrm, 3, VertexAttribPointerType.Float, true, 56, 2 * 4);
+            GL.VertexAttribPointer(shader.attribute_vpos, 3, VertexAttribPointerType.Float, false, 56, 5 * 4);
 
-			// bind triangle index data and render
-			GL.BindBuffer( BufferTarget.ElementArrayBuffer, triangleBufferId );
-			GL.DrawArrays( PrimitiveType.Triangles, 0, triangles.Length * 3 );
 
-			// bind quad index data and render
-			if( quads.Length > 0 )
-			{
-				GL.BindBuffer( BufferTarget.ElementArrayBuffer, quadBufferId );
-				GL.DrawArrays( PrimitiveType.Quads, 0, quads.Length * 4 );
-			}
+            // bind triangle index data and render
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, triangleBufferId);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, triangles.Length * 3);
 
-			// restore previous OpenGL state
-			GL.UseProgram( 0 );
-			GL.PopClientAttrib();
-		}
+            // bind quad index data and render
+            if (quads.Length > 0)
+            {
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, quadBufferId);
+                GL.DrawArrays(PrimitiveType.Quads, 0, quads.Length * 4);
+            }
 
-		// layout of a single vertex
-		[StructLayout( LayoutKind.Sequential )]
+            // restore previous OpenGL state
+            GL.UseProgram(0);
+            GL.PopClientAttrib();
+        }
+
+        // layout of a single vertex
+        [StructLayout( LayoutKind.Sequential )]
 		public struct ObjVertex
 		{
 			public Vector2 TexCoord;
