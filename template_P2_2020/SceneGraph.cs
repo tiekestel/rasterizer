@@ -51,6 +51,7 @@ namespace Template
         public Vector3 color;
         public ParentMesh parent;
         public float angle;
+        public depthmap shadowMap;
 
         public Spotlight(Vector4 _position, Vector4 _direction, float _strength, Vector3 _color, ParentMesh _parent, float _angle)
         {
@@ -60,6 +61,7 @@ namespace Template
             color = _color;
             parent = _parent;
             angle = _angle;
+            shadowMap = new depthmap(this);
         }
     }
 
@@ -73,7 +75,7 @@ namespace Template
 
 		public SceneGraph()
 		{
-            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0/*, new Texture("../../normalMaps/crystal.jpg")*/);
+            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0, new Texture("../../normalMaps/crystal.jpg"));
             ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 0);
             primaryMeshes = new List<ParentMesh>();
             primaryMeshes.Add(world);
@@ -83,7 +85,7 @@ namespace Template
             pointlights = new List<Pointlight>();
             //pointlights.Add(new Pointlight(new Vector4(0, 0, 0, 1), 50, new Vector3(1, 1, 1), null));
             spotlights = new List<Spotlight>();
-            //spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
+            spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
             float[] skyboxVertices = new float[] {
 				// positions          
 				-1.0f,  1.0f, -1.0f,
@@ -149,6 +151,7 @@ namespace Template
             {
                 p.RenderCubemap(Matrix4.Identity, this);
             }
+           
         }
 
 		public void Render(Matrix4 camera, Matrix4 cameraPosition, Shader shader)
@@ -189,6 +192,10 @@ namespace Template
             foreach (DirectionalLight d in directionalLights)
             {
                 d.shadowMap.Render(programValues.depthmapshader, this);
+            }
+            foreach(Spotlight s in spotlights)
+            {
+                s.shadowMap.Render(programValues.depthmapshader, this);
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);

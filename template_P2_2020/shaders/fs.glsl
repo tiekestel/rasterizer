@@ -20,6 +20,8 @@ struct spotlight {
 	float strength;
 	vec3 color;
 	float angle;
+	mat4 lightSpace;
+	sampler2D shadowMap;
 };
 
 // shader input
@@ -44,7 +46,7 @@ vec3 texColor;
 vec3 viewDirection;
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color);
-bool Shadow(vec4 positionLightspace, directionalLight d);
+bool Shadow(vec4 positionLightspace, sampler2D shadowMap, vec3 lightDirection, float zFar);
 // shader output
 layout(location = 0) out vec4 outputColor;
 
@@ -65,11 +67,8 @@ void main()
 	vec3 color = texColor * 0.15;
 
 	for(int i = 0; i < directionalLightCount; ++i) {
-		if(Shadow(directionalLights[i].lightSpace * vec4(position,1),directionalLights[i])){
+		if(Shadow(directionalLights[i].lightSpace * vec4(position,1),directionalLights[i].shadowMap, directionalLights[i].direction, 1000)){
 			Phong(normalize(directionalLights[i].direction), normalVec, directionalLights[i].strength, directionalLights[i].color, color);
-		}
-		else{
-			color = vec3(1);
 		}
 	}
 
@@ -83,7 +82,9 @@ void main()
 	for(int i = 0; i < spotlightCount; ++i) {
 		vec3 lightDirection = spotlights[i].position - position;
 		if(dot(normalize(lightDirection), -spotlights[i].direction) > spotlights[i].angle) {
-			Phong(normalize(lightDirection), normalVec, spotlights[i].strength / (length(lightDirection) * length(lightDirection)), spotlights[i].color, color); 
+			if(Shadow(spotlights[i].lightSpace * vec4(position,1),spotlights[i].shadowMap, -spotlights[i].direction, 1000)){
+				Phong(normalize(lightDirection), normalVec, spotlights[i].strength / (length(lightDirection) * length(lightDirection)), spotlights[i].color, color); 
+			}
 		}
 	}
 
@@ -96,10 +97,6 @@ void main()
 
 	}
 	outputColor = vec4(color, 1);
-	
-//	float value = texture(directionalLights[0].shadowMap, uv).r;
-//	outputColor = vec4(vec3(value),1);
-
 } 
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color) {
@@ -112,11 +109,12 @@ void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 li
 	color += (texColor * (diffuse + specular) * lightColor) * strength;
 }
 
-bool Shadow(vec4 positionLightspace, directionalLight d){
+bool Shadow(vec4 positionLightspace, sampler2D shadowMap, vec3 lightDirection, float zFar){
 	vec3 projCoord = positionLightspace.xyz / positionLightspace.w;
 	projCoord = projCoord *0.5 + 0.5;
-	float mapdepth = texture(d.shadowMap,projCoord.xy).r;
-	float depth = projCoord.z;
-	return depth > mapdepth;
+	float mapdepth = texture(shadowMap,projCoord.xy).r;
+	float depth = positionLightspace.z / zFar;
+	float bias = max(0.05 * 1.0 - dot(normalVec, lightDirection),0.005);
+	return depth - bias <= mapdepth;
 }
 

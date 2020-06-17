@@ -91,20 +91,22 @@ namespace Template
             }
 
             //Directional lights
+            int depthmaps = 0;
             for (int i = 0; i < directionalLights.Count; ++i)
             {
                 int direction = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].direction");
                 int color = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].strength");
+                int map = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].shadowMap");
+                int mat = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].lightSpace");
                 GL.Uniform3(direction, Vector3.Normalize(directionalLights[i].direction.Xyz));
                 GL.Uniform3(color, directionalLights[i].color);
                 GL.Uniform1(strength, directionalLights[i].strength);
-                int map = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].shadowMap");
-                GL.Uniform1(map, 3 + i);
-                GL.ActiveTexture(TextureUnit.Texture3 + i);
+                GL.Uniform1(map, 3 + depthmaps);
+                GL.ActiveTexture(TextureUnit.Texture3 + depthmaps);
                 GL.BindTexture(TextureTarget.Texture2D, directionalLights[i].shadowMap.id);
-                int mat = GL.GetUniformLocation(shader.programID, "directionalLights[" + i + "].lightSpace");
-                GL.ProgramUniformMatrix4(shader.programID, mat, false, ref directionalLights[i].shadowMap.camera);
+                GL.UniformMatrix4(mat, false, ref directionalLights[i].shadowMap.camera);
+                depthmaps++;
             }
             int location = GL.GetUniformLocation(shader.programID, "directionalLightCount");
             GL.Uniform1(location, directionalLights.Count);
@@ -130,11 +132,18 @@ namespace Template
                 int color = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].strength");
                 int angle = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].angle");
+                int map = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].shadowMap");
+                int mat = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].lightSpace");
                 GL.Uniform3(position, spotlights[i].position.Xyz);
                 GL.Uniform3(direction, Vector3.Normalize(spotlights[i].direction.Xyz));
                 GL.Uniform3(color, spotlights[i].color);
                 GL.Uniform1(strength, spotlights[i].strength);
                 GL.Uniform1(angle, spotlights[i].angle);
+                GL.Uniform1(map, 3 + depthmaps);
+                GL.ActiveTexture(TextureUnit.Texture3 + depthmaps);
+                GL.BindTexture(TextureTarget.Texture2D, spotlights[i].shadowMap.id);
+                GL.UniformMatrix4(mat, false, ref spotlights[i].shadowMap.camera);
+                depthmaps++;
             }
             location = GL.GetUniformLocation(shader.programID, "spotlightCount");
             GL.Uniform1(location, spotlights.Count);
