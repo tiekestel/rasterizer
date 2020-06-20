@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="cubeDepthmap.cs" />
     <Compile Include="cubemap.cs" />
     <Compile Include="depthmap.cs" />
     <Compile Include="mesh.cs" />

@@ -4,6 +4,7 @@ struct pointlight{
 	vec3 position;
 	float strength;
 	vec3 color;
+	samplerCube shadowMap;
 };
 
 struct directionalLight{
@@ -34,7 +35,7 @@ layout (binding = 1) uniform sampler2D normalMap;
 layout (binding = 2) uniform samplerCube cubeMap;
 uniform pointlight pointlights[20];
 uniform directionalLight directionalLights[20];
-uniform spotlight spotlights[20];
+uniform spotlight spotlights[40];
 uniform int pointlightCount;
 uniform int directionalLightCount;
 uniform int spotlightCount;
@@ -47,6 +48,7 @@ vec3 viewDirection;
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color);
 bool Shadow(vec4 positionLightspace, sampler2D shadowMap, vec3 lightDirection, float zFar);
+bool Shadow(vec3 lightPosition, samplerCube shadowMap);
 // shader output
 layout(location = 0) out vec4 outputColor;
 
@@ -73,10 +75,16 @@ void main()
 	}
 
 	for(int i = 0; i < pointlightCount; ++i) {
-		vec3 lightDirection = pointlights[i].position - position;
-		float strength = pointlights[i].strength / (length(lightDirection) * length(lightDirection));
-		lightDirection = normalize(lightDirection);
-		Phong(lightDirection, normalVec, strength, pointlights[i].color, color);
+		if(Shadow(pointlights[i].position, pointlights[i].shadowMap)){
+			vec3 lightDirection = pointlights[i].position - position;
+			float strength = pointlights[i].strength / (length(lightDirection) * length(lightDirection));
+			lightDirection = normalize(lightDirection);
+			Phong(lightDirection, normalVec, strength, pointlights[i].color, color);
+		}
+//		vec3 lightDirection = pointlights[i].position - position;
+//		float strength = pointlights[i].strength / (length(lightDirection) * length(lightDirection));
+//		lightDirection = normalize(lightDirection);
+//		Phong(lightDirection, normalVec, strength, pointlights[i].color, color);
 	}
 
 	for(int i = 0; i < spotlightCount; ++i) {
@@ -96,7 +104,9 @@ void main()
 	else if(cubeMapType == 2){
 
 	}
+
 	outputColor = vec4(color, 1);
+	
 } 
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color) {
@@ -116,5 +126,13 @@ bool Shadow(vec4 positionLightspace, sampler2D shadowMap, vec3 lightDirection, f
 	float depth = positionLightspace.z / zFar;
 	float bias = max(0.05 * 1.0 - dot(normalVec, lightDirection),0.005);
 	return depth - bias <= mapdepth;
+}
+
+bool Shadow(vec3 lightPosition, samplerCube shadowMap){
+	vec3 fragToLight = position - lightPosition;
+	float mapdepth = texture(shadowMap, fragToLight).r;
+	float depth = length(fragToLight) / 500;
+	float bias = 0.05;
+	return depth - 0.01 <= mapdepth;
 }
 

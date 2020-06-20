@@ -110,19 +110,33 @@ namespace Template
             }
             int location = GL.GetUniformLocation(shader.programID, "directionalLightCount");
             GL.Uniform1(location, directionalLights.Count);
-            
+
+            int cubes = 0;
             //Pointlights
             for (int i = 0; i < pointlights.Count; ++i)
             {
                 int position = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].position");
                 int color = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].strength");
+                int map = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].shadowMap");
                 GL.Uniform3(position, pointlights[i].position.Xyz);
                 GL.Uniform3(color, pointlights[i].color);
                 GL.Uniform1(strength, pointlights[i].strength);
+                GL.Uniform1(map, 3 + depthmaps);
+                GL.ActiveTexture(TextureUnit.Texture3 + depthmaps);
+                GL.BindTexture(TextureTarget.TextureCubeMap, pointlights[i].shadowMap.id);
+                depthmaps++;
+                cubes++;
             }
             location = GL.GetUniformLocation(shader.programID, "pointlightCount");
             GL.Uniform1(location, pointlights.Count);
+
+            for(int i = cubes; i < 20; ++i)
+            {
+                int map = GL.GetUniformLocation(shader.programID, "pointlights[" + i + "].shadowMap");
+                GL.Uniform1(map, 3 + depthmaps - 1);
+                GL.BindTexture(TextureTarget.TextureCubeMap, pointlights[0].shadowMap.id);
+            }
 
             //Spotlights
             for (int i = 0; i < spotlights.Count; ++i)

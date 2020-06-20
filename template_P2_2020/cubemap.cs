@@ -10,6 +10,17 @@ namespace Template
     public class cubemap
     {
         public int framebuffer, renderbuffer, id, type;
+
+        Matrix4[] cameraRotations = new Matrix4[]
+        {
+            Matrix4.CreateRotationY((float) Math.PI * 0.5f) * Matrix4.CreateRotationZ((float) Math.PI),
+            Matrix4.CreateRotationY(-(float) Math.PI * 0.5f) * Matrix4.CreateRotationZ((float) Math.PI),
+            Matrix4.CreateRotationX(-(float) Math.PI * 0.5f),
+            Matrix4.CreateRotationX((float) Math.PI * 0.5f),
+            Matrix4.CreateRotationY((float) Math.PI) * Matrix4.CreateRotationZ((float) Math.PI),
+            Matrix4.CreateRotationZ((float) Math.PI)
+        };
+        Matrix4 cameraFOV = Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI * 0.5), 1, 0.01f, 1000);
         public cubemap(int _type)
         {
             type = _type;
@@ -38,25 +49,12 @@ namespace Template
             if (GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != FramebufferErrorCode.FramebufferComplete)
                 Console.WriteLine("CubemapBuffer not set up correctly");
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
-
         }
         public void Render(Shader shader, Vector3 transform, SceneGraph scene, ParentMesh parent)
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.TextureCubeMap, id);
-            Matrix4 cameraFOV = Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI * 0.5), 1, 0.01f, 1000);
-            Matrix4[] cameraRotations = new Matrix4[]{
-                    Matrix4.CreateRotationY((float) Math.PI * 0.5f) * Matrix4.CreateRotationZ((float) Math.PI),
-                    Matrix4.CreateRotationY(-(float) Math.PI * 0.5f) * Matrix4.CreateRotationZ((float) Math.PI),
-                    Matrix4.CreateRotationX(-(float) Math.PI * 0.5f),
-                    Matrix4.CreateRotationX((float) Math.PI * 0.5f),   
-                    Matrix4.CreateRotationY((float) Math.PI) * Matrix4.CreateRotationZ((float) Math.PI),        
-                    Matrix4.CreateRotationZ((float) Math.PI)
-
-
-                };
             Matrix4 cameraPosition = Matrix4.CreateTranslation(-transform);
             GL.Viewport(0, 0, programValues.cubemapres, programValues.cubemapres);
             GL.Enable(EnableCap.DepthTest);
@@ -67,7 +65,7 @@ namespace Template
                 GL.Clear(ClearBufferMask.DepthBufferBit);
                 GL.ClearColor(0, 0, 0, 0);
                 scene.RenderSkyBox(cameraPosition, cameraRotations[i], cameraFOV, programValues.skyboxshader);    
-                scene.SimpleRender(cameraRotations[i] * cameraFOV, cameraPosition, programValues.cubemapshader, parent);
+                scene.SimpleRender(cameraPosition * cameraRotations[i] * cameraFOV, cameraPosition, programValues.cubemapshader, parent);
             }
             GL.Disable(EnableCap.DepthTest);
             GL.Viewport(0, 0, programValues.screenwidth, programValues.screenheight);

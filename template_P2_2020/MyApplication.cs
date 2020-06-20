@@ -37,6 +37,7 @@ namespace Template
 			programValues.skyboxshader = new Shader( "../../shaders/vs_skybox.glsl", "../../shaders/fs_skybox.glsl" );
             programValues.cubemapshader = new Shader("../../shaders/vs_cubemap.glsl", "../../shaders/fs_cubemap.glsl");
             programValues.depthmapshader = new Shader("../../shaders/vs_depthmap.glsl", "../../shaders/fs_depthmap.glsl");
+            programValues.depthcubemapshader = new Shader("../../shaders/vs_depthmap.glsl", "../../shaders/fs_depthcubemap.glsl");
 
 			// create the render target
 			target = new RenderTarget( screen.width, screen.height );

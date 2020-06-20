@@ -18,13 +18,17 @@ namespace Template
         public Matrix4 localTransform;
         cubemap cubemap;
 
-        public ParentMesh(Mesh _mesh, Texture _texture, Matrix4 _localTransform, int _cubemap = 0, Texture _normalMap = null, ParentMesh _parent = null)
+        public ParentMesh(Mesh _mesh, Texture _texture, Matrix4 _localTransform, float hdr = 0, int _cubemap = 0, Texture _normalMap = null, ParentMesh _parent = null)
         {
             mesh = _mesh;
             texture = _texture;
             localTransform = _localTransform;
             normalMap = _normalMap;
             parent = _parent;
+            if(hdr != 0)
+            {
+                texture.setHDR(hdr);
+            }
             if (_cubemap != 0)
             {
                 cubemap = new cubemap(_cubemap);

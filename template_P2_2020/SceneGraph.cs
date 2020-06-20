@@ -34,6 +34,7 @@ namespace Template
         public float strength;
         public Vector3 color;
         public ParentMesh parent;
+        public cubeDepthmap shadowMap;
 
         public Pointlight(Vector4 _position, float _strength, Vector3 _color, ParentMesh _parent)
         {
@@ -41,6 +42,7 @@ namespace Template
             strength = _strength;
             color = _color;
             parent = _parent;
+            shadowMap = new cubeDepthmap();
         }
     }
 
@@ -75,17 +77,20 @@ namespace Template
 
 		public SceneGraph()
 		{
-            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0, new Texture("../../normalMaps/crystal.jpg"));
-            ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 0);
+            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0, 0, new Texture("../../normalMaps/crystal.jpg"));
+            ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 0,1);
             primaryMeshes = new List<ParentMesh>();
             primaryMeshes.Add(world);
             primaryMeshes.Add(teapot);
+            primaryMeshes.Add(new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 10)), 0));
             directionalLights = new List<DirectionalLight>();
             directionalLights.Add(new DirectionalLight(new Vector4(-1f, 1, 0, 1), 1, new Vector3(1, 1, 1), null));
             pointlights = new List<Pointlight>();
-            //pointlights.Add(new Pointlight(new Vector4(0, 0, 0, 1), 50, new Vector3(1, 1, 1), null));
+            pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 500, new Vector3(1, 1, 1), null));
+            //pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 5000, new Vector3(1, 1, 1), null));
             spotlights = new List<Spotlight>();
-            spotlights.Add(new Spotlight(new Vector4(0,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
+            //spotlights.Add(new Spotlight(new Vector4(20,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
+            spotlights.Add(new Spotlight(new Vector4(20,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
             float[] skyboxVertices = new float[] {
 				// positions          
 				-1.0f,  1.0f, -1.0f,
@@ -193,6 +198,10 @@ namespace Template
             {
                 d.shadowMap.Render(programValues.depthmapshader, this);
             }
+            foreach(Pointlight p in pointlights)
+            {
+                p.shadowMap.Render(programValues.depthmapshader, p.position.Xyz, this);
+            }
             foreach(Spotlight s in spotlights)
             {
                 s.shadowMap.Render(programValues.depthmapshader, this);
@@ -224,6 +233,24 @@ namespace Template
             GL.UniformMatrix4(GL.GetUniformLocation(skyboxshader.programID, "view"), false, ref cameraRotation);
             GL.UniformMatrix4(GL.GetUniformLocation(skyboxshader.programID, "projection"), false, ref cameraFOV);
             GL.BindTexture(TextureTarget.TextureCubeMap, skybox);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
+            GL.DisableVertexAttribArray(2);
+            GL.Disable(EnableCap.TextureCubeMap);
+            GL.DepthFunc(DepthFunction.Less);
+            GL.Disable(EnableCap.DepthTest);
+        }
+
+        public void RenderCubeMap(Matrix4 cameraPosition, Matrix4 cameraRotation, Matrix4 cameraFOV, Shader skyboxshader)
+        {
+            //skybox
+            GL.DepthFunc(DepthFunction.Lequal);
+            GL.EnableVertexAttribArray(2);
+            GL.Enable(EnableCap.TextureCubeMap);
+            GL.UseProgram(skyboxshader.programID);
+            GL.BindVertexArray(skyboxbuffer);
+            GL.UniformMatrix4(GL.GetUniformLocation(skyboxshader.programID, "view"), false, ref cameraRotation);
+            GL.UniformMatrix4(GL.GetUniformLocation(skyboxshader.programID, "projection"), false, ref cameraFOV);
+            GL.BindTexture(TextureTarget.TextureCubeMap, programValues.cubemap);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 36);
             GL.DisableVertexAttribArray(2);
             GL.Disable(EnableCap.TextureCubeMap);

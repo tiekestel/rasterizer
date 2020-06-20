@@ -8,7 +8,7 @@ namespace Template
 {
 	public static class programValues
 	{
-        public static Shader cubemapshader, skyboxshader, depthmapshader;
-        public static int screenwidth, screenheight, cubemapres = 128, depthmapres = 1024, shadowmap;
+        public static Shader cubemapshader, skyboxshader, depthmapshader, depthcubemapshader, hdrtargetshader;
+        public static int screenwidth, screenheight, cubemapres = 128, depthmapres = 4096, cubedepthmapres = 512, shadowmap, cubemap;
 	}
 }
