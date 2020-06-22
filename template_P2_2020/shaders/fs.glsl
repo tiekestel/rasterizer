@@ -42,6 +42,7 @@ uniform int spotlightCount;
 uniform vec4 viewPos;
 uniform bool isNormalMap;
 uniform int cubeMapType;
+uniform float intensity;
 vec3 normalVec;
 vec3 texColor;
 vec3 viewDirection;
@@ -57,7 +58,7 @@ void main()
 {
 	viewDirection = normalize(position -vec3(-viewPos.x, viewPos.y, -viewPos.z));
 	viewDirection.y *= -1;
-    texColor = texture( pixels, uv ).xyz;
+    texColor = texture( pixels, uv ).xyz * pow(2, intensity);
 
 	if(isNormalMap){
 		normalVec = 2 * texture( normalMap, uv ).xyz - 1;

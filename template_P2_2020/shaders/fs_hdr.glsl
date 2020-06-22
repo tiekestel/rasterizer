@@ -1,11 +1,16 @@
-#version 330 core
-out vec4 FragColor;
+#version 420 core
+in vec2 Texcoords;
 
-in vec3 TexCoords;
+out vec4 outputColor;
 
-uniform samplerCube skybox;
+layout(binding = 1) uniform sampler2D tex;
+
+uniform float intensity;
 
 void main()
 {    
-    FragColor = texture(skybox, TexCoords);
+    outputColor = texture(tex,Texcoords);
+
+	outputColor *= pow(2,intensity);
+
 }

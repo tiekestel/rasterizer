@@ -38,13 +38,14 @@ namespace Template
             programValues.cubemapshader = new Shader("../../shaders/vs_cubemap.glsl", "../../shaders/fs_cubemap.glsl");
             programValues.depthmapshader = new Shader("../../shaders/vs_depthmap.glsl", "../../shaders/fs_depthmap.glsl");
             programValues.depthcubemapshader = new Shader("../../shaders/vs_depthmap.glsl", "../../shaders/fs_depthcubemap.glsl");
+            programValues.hdrtargetshader = new Shader("../../shaders/vs_hdr.glsl", "../../shaders/fs_hdr.glsl");
 
 			// create the render target
 			target = new RenderTarget( screen.width, screen.height );
 			
             cameraPosition = new Matrix4();
             cameraRotation = Matrix4.Identity;
-            cameraFOV = Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI * 0.5), 1, 0.01f, 1000);
+            cameraFOV = Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI * 0.5), screen.width / screen.height, 0.01f, 1000);
 
             scene = new SceneGraph();
 
@@ -52,7 +53,7 @@ namespace Template
 			GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
 			colorbuffer = GL.GenTexture();
 			GL.BindTexture(TextureTarget.Texture2D, colorbuffer);
-			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, screen.width, screen.height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba32f, screen.width, screen.height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
 			GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, new int[] { (int)All.Nearest });
 			GL.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, new int[] { (int)All.Nearest });
 			renderbuffer = GL.GenRenderbuffer();
@@ -196,7 +197,7 @@ namespace Template
             //GL.EnableVertexAttribArray(1);
             //GL.Enable(EnableCap.Texture2D);
             //GL.ActiveTexture(TextureUnit.Texture1);
-            //GL.BindTexture(TextureTarget.Texture2D, programValues.shadowmap);
+            //GL.BindTexture(TextureTarget.Texture2D, hdrColorbuffer);
 
             //GL.UseProgram(rendershader.programID);
 
@@ -234,5 +235,5 @@ namespace Template
             GL.DisableVertexAttribArray(1);
             GL.Disable(EnableCap.Texture2D);
         }
-	}
+    }
 }

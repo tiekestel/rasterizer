@@ -82,15 +82,15 @@ namespace Template
             primaryMeshes = new List<ParentMesh>();
             primaryMeshes.Add(world);
             primaryMeshes.Add(teapot);
-            primaryMeshes.Add(new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 10)), 0));
+            primaryMeshes.Add(new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 10)), 9));
             directionalLights = new List<DirectionalLight>();
             directionalLights.Add(new DirectionalLight(new Vector4(-1f, 1, 0, 1), 1, new Vector3(1, 1, 1), null));
             pointlights = new List<Pointlight>();
-            pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 500, new Vector3(1, 1, 1), null));
-            //pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 5000, new Vector3(1, 1, 1), null));
+            //pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 500, new Vector3(1, 1, 1), null));
+            pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 0, new Vector3(1, 1, 1), null));
             spotlights = new List<Spotlight>();
             //spotlights.Add(new Spotlight(new Vector4(20,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
-            spotlights.Add(new Spotlight(new Vector4(20,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
+            //spotlights.Add(new Spotlight(new Vector4(20,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
             float[] skyboxVertices = new float[] {
 				// positions          
 				-1.0f,  1.0f, -1.0f,

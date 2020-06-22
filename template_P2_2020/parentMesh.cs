@@ -16,6 +16,7 @@ namespace Template
         Mesh mesh;
         Texture texture, normalMap;
         public Matrix4 localTransform;
+        public float intensity;
         cubemap cubemap;
 
         public ParentMesh(Mesh _mesh, Texture _texture, Matrix4 _localTransform, float hdr = 0, int _cubemap = 0, Texture _normalMap = null, ParentMesh _parent = null)
@@ -25,10 +26,7 @@ namespace Template
             localTransform = _localTransform;
             normalMap = _normalMap;
             parent = _parent;
-            if(hdr != 0)
-            {
-                texture.setHDR(hdr);
-            }
+            intensity = hdr;
             if (_cubemap != 0)
             {
                 cubemap = new cubemap(_cubemap);
@@ -46,7 +44,7 @@ namespace Template
             //Combine matrices
             Matrix4 finalTransform = localTransform * parentMatrix;
 
-            mesh.Render(shader, finalTransform, camera, cameraPosition, texture, normalMap, cubemap, pointlights, directionalLights, spotlights);
+            mesh.Render(shader, finalTransform, camera, cameraPosition, intensity, texture, normalMap, cubemap, pointlights, directionalLights, spotlights);
 
             //Render child meshes
             foreach (ParentMesh p in child_meshes)

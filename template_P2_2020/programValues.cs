@@ -10,5 +10,7 @@ namespace Template
 	{
         public static Shader cubemapshader, skyboxshader, depthmapshader, depthcubemapshader, hdrtargetshader;
         public static int screenwidth, screenheight, cubemapres = 128, depthmapres = 4096, cubedepthmapres = 512, shadowmap, cubemap;
+
+        public static int tex;
 	}
 }

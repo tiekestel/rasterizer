@@ -49,7 +49,7 @@ namespace Template
 		}
 
 		// render the mesh using the supplied shader and matrix
-		public void Render( Shader shader, Matrix4 transform, Matrix4 camera, Matrix4 cameraPosition, Texture texture, Texture normalMap, cubemap cubemap, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights )
+		public void Render( Shader shader, Matrix4 transform, Matrix4 camera, Matrix4 cameraPosition, float intensity, Texture texture, Texture normalMap, cubemap cubemap, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights )
 		{
 			// on first run, prepare buffers
 			Prepare( shader );
@@ -184,6 +184,8 @@ namespace Template
             GL.Uniform1(texLoc, 0);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, texture.id);
+
+            GL.Uniform1(GL.GetUniformLocation(shader.programID, "intensity"), intensity);
 
             // enable position, normal and uv attributes
             GL.EnableVertexAttribArray( shader.attribute_vpos );
