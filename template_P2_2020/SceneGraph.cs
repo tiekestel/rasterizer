@@ -63,7 +63,6 @@ namespace Template
         public Vector3 color;
         public ParentMesh parent;
         public float angle;
-        public depthmap shadowMap;
 
         public Spotlight(Vector4 _position, Vector4 _direction, float _strength, Vector3 _color, ParentMesh _parent, float _angle)
         {
@@ -73,7 +72,6 @@ namespace Template
             color = _color;
             parent = _parent;
             angle = _angle;
-            shadowMap = new depthmap(this);
         }
 
         public void calc()
@@ -365,7 +363,6 @@ namespace Template
             foreach(Spotlight s in spotlights)
             {
                 s.calc();
-                s.shadowMap.Render(programValues.depthmapshader, this);
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
@@ -428,10 +425,10 @@ namespace Template
 
             cameraheight.Y += mousestate.ScrollWheelValue - prevmousestate.ScrollWheelValue;
 			Matrix4 carTransform = carbody.CalcFinalTransform();
-   //         cameraPosition = Matrix4.Invert(carTransform.ClearRotation()) * Matrix4.CreateTranslation(cameraheight);
-			//cameraRotation = Matrix4.Invert(carTransform.ClearTranslation()) * Matrix4.CreateRotationY((float)Math.PI) * Matrix4.CreateRotationX((float)(0.5 * Math.PI));
+			cameraPosition = Matrix4.Invert(carTransform.ClearRotation()) * Matrix4.CreateTranslation(cameraheight);
+			cameraRotation = Matrix4.Invert(carTransform.ClearTranslation()) * Matrix4.CreateRotationY((float)Math.PI) * Matrix4.CreateRotationX((float)(0.5 * Math.PI));
 
-            if(state.IsKeyDown(Key.H) && !prevstate.IsKeyDown(Key.H))
+			if (state.IsKeyDown(Key.H) && !prevstate.IsKeyDown(Key.H))
             {
                 if(headlight)
                 {

@@ -146,17 +146,11 @@ namespace Template
                 int color = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].color");
                 int strength = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].strength");
                 int angle = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].angle");
-                int map = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].shadowMap");
-                int mat = GL.GetUniformLocation(shader.programID, "spotlights[" + i + "].lightSpace");
                 GL.Uniform3(position, spotlights[i].position.Xyz);
                 GL.Uniform3(direction, Vector3.Normalize(spotlights[i].direction.Xyz));
                 GL.Uniform3(color, spotlights[i].color);
                 GL.Uniform1(strength, spotlights[i].strength);
                 GL.Uniform1(angle, spotlights[i].angle);
-                GL.Uniform1(map, 3 + depthmaps);
-                GL.ActiveTexture(TextureUnit.Texture3 + depthmaps);
-                GL.BindTexture(TextureTarget.Texture2D, spotlights[i].shadowMap.id);
-                GL.UniformMatrix4(mat, false, ref spotlights[i].shadowMap.camera);
                 depthmaps++;
             }
             location = GL.GetUniformLocation(shader.programID, "spotlightCount");
