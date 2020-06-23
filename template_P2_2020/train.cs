@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using OpenTK;
+using OpenTK.Input;
+
 namespace Template
 {
     class train : gameObject
@@ -16,7 +18,9 @@ namespace Template
             parent = _parent;
             beginTranslation = parent.localTranslation;
         }
-        public override void Update(Stopwatch gameTime)
+
+		// update train position
+        public override void Update(Stopwatch gameTime, KeyboardState state)
         {
             parent.localTranslation = Matrix4.CreateTranslation(-Vector3.UnitX * (float)gameTime.Elapsed.TotalSeconds) * parent.localTranslation;
             time += (float)gameTime.Elapsed.TotalSeconds;

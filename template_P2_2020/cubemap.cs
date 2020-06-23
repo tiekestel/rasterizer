@@ -27,7 +27,6 @@ namespace Template
             framebuffer = GL.GenFramebuffer();
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
 
-
             renderbuffer = GL.GenRenderbuffer();
             GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderbuffer);
             GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent, programValues.cubemapres, programValues.cubemapres);
@@ -50,6 +49,8 @@ namespace Template
                 Console.WriteLine("CubemapBuffer not set up correctly");
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
+
+		// render cubemap
         public void Render(Shader shader, Vector3 transform, SceneGraph scene, ParentMesh parent)
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);

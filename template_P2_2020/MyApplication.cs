@@ -10,11 +10,9 @@ namespace Template
 	class MyApplication
 	{
 		// member variables
-		public Surface screen;                  // background surface for printing etc.
-		Stopwatch timer;                        // timer for measuring frame duration
-		Shader shader, postproc, rendershader;                          // shader to use for rendering
-		RenderTarget target;                    // intermediate render target
-		ScreenQuad quad;                        // screen filling quad for post processing
+		public Surface screen;               
+		Stopwatch timer;                        
+		Shader shader, postproc, rendershader;                          
 		SceneGraph scene;
 		Matrix4 cameraPosition, cameraRotation, cameraFOV;
 		int framebuffer, renderbuffer, quadVertexbuffer, quadTexbuffer;
@@ -39,25 +37,25 @@ namespace Template
             programValues.cubemapshader = new Shader("../../shaders/vs_cubemap.glsl", "../../shaders/fs_cubemap.glsl");
             programValues.depthmapshader = new Shader("../../shaders/vs_depthmap.glsl", "../../shaders/fs_depthmap.glsl");
             programValues.depthcubemapshader = new Shader("../../shaders/vs_depthmap.glsl", "../../shaders/fs_depthcubemap.glsl");
-            programValues.hdrtargetshader = new Shader("../../shaders/vs_hdr.glsl", "../../shaders/fs_hdr.glsl");
-
-			// create the render target
-			target = new RenderTarget( screen.width, screen.height );
 			
             cameraPosition = new Matrix4();
             cameraRotation = Matrix4.CreateRotationX((float)(0.5 * Math.PI));
             cameraFOV = Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI * 0.5), screen.width / screen.height, 0.01f, 1000);
 
+            //create scene
             scene = new SceneGraph();
 
+            // create standard framebuffer
 			framebuffer = GL.GenFramebuffer();
 			GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
 
+            // create standard renderbuffer
 			renderbuffer = GL.GenRenderbuffer();
 			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderbuffer);
 			GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent, screen.width, screen.height);
 			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment, RenderbufferTarget.Renderbuffer, renderbuffer);
 
+            // create standard texture
             colorbuffer = new int[2];
             GL.GenTextures(2, colorbuffer);
             for(int i = 0; i < 2; ++i)
@@ -72,7 +70,6 @@ namespace Template
             DrawBuffersEnum[] attachments = new DrawBuffersEnum[2] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1 };
             GL.DrawBuffers(2, attachments);
 
-
             if (GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != FramebufferErrorCode.FramebufferComplete)
 			{
 				Console.WriteLine("Framebuffer not set up correctly");
@@ -82,6 +79,7 @@ namespace Template
             hdrFramebuffer = new int[2];
             hdrColorbuffer = new int[2];
 
+            // create post processing
             GL.GenFramebuffers(2, hdrFramebuffer);
             GL.GenTextures(2, hdrColorbuffer);
 			for(int i = 0; i < 2; ++i)
@@ -100,6 +98,7 @@ namespace Template
 				Console.WriteLine("HDRFramebuffer not set up correctly");
 			}
 
+            // create draw quad
 			float[] vertices = new float[] {
 				-1f, -1f,
 				1f, -1f,
@@ -117,6 +116,8 @@ namespace Template
 				1f, 0,
 				1f, 1f
 			};
+
+            //create buffers
 			quadVertexbuffer = GL.GenBuffer();
 			GL.BindBuffer(BufferTarget.ArrayBuffer, quadVertexbuffer);
 			GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
@@ -125,68 +126,72 @@ namespace Template
 			GL.BindBuffer(BufferTarget.ArrayBuffer, quadTexbuffer);
 			GL.BufferData(BufferTarget.ArrayBuffer, texCoords.Length * sizeof(float), texCoords, BufferUsageHint.StaticDraw);
 			GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 0, 0);
-
-
-
-
 		}
 
-        Vector3 camera = new Vector3(0, -14.5f, 0);
+        // tick for input
         MouseState prevmouse, mouse;
-		// tick for background surface
+        KeyboardState keys, prevkeys;
+		Vector3 camera = new Vector3(0, -15, 0);
 		public void Tick()
 		{
             // measure frame duration
-
-            KeyboardState keys = Keyboard.GetState();
+            prevkeys = keys;
+            keys = Keyboard.GetState();
             prevmouse = mouse;
             mouse = Mouse.GetState();
 
-			if (keys.IsKeyDown(Key.A))
+			if(keys.IsKeyDown(Key.W))
 			{
-                camera.X += (float)timer.Elapsed.TotalSeconds * 10;
+				camera.Z += (float)timer.Elapsed.TotalSeconds * 5;
+			}
+			else if(keys.IsKeyDown(Key.S))
+			{
+				camera.Z -= (float)timer.Elapsed.TotalSeconds * 5;
+			}
+			else if (keys.IsKeyDown(Key.A))
+			{
+				camera.X += (float)timer.Elapsed.TotalSeconds * 5;
 			}
 			else if (keys.IsKeyDown(Key.D))
 			{
-                camera.X -= (float)timer.Elapsed.TotalSeconds * 10;
-            }
-			if (keys.IsKeyDown(Key.W))
+				camera.X -= (float)timer.Elapsed.TotalSeconds * 5;
+			}
+			else if (keys.IsKeyDown(Key.E))
 			{
-                camera.Z += (float)timer.Elapsed.TotalSeconds * 10;
-            }
-			else if (keys.IsKeyDown(Key.S))
+				camera.Y -= (float)timer.Elapsed.TotalSeconds * 5;
+			}
+			else if (keys.IsKeyDown(Key.Q))
 			{
-                camera.Z -= (float)timer.Elapsed.TotalSeconds * 10;
-            }
-            cameraPosition = Matrix4.CreateTranslation(camera);
+				camera.Y += (float)timer.Elapsed.TotalSeconds * 5;
+			}
 
-            if(mouse.ScrollWheelValue != prevmouse.ScrollWheelValue)
-            {
-                camera.Y += mouse.ScrollWheelValue - prevmouse.ScrollWheelValue;
-            }
-
-            //if (keys.IsKeyDown(Key.Down))
-            //{
-            //    cameraRotation *= Matrix4.CreateRotationX((float)timer.Elapsed.TotalSeconds);
-            //}
-            //else if (keys.IsKeyDown(Key.Up))
-            //{
-            //    cameraRotation *= Matrix4.CreateRotationX(-(float)timer.Elapsed.TotalSeconds);
-            //}
-            //else if (keys.IsKeyDown(Key.Right))
-            //{
-            //    cameraRotation *= Matrix4.CreateRotationY((float)timer.Elapsed.TotalSeconds);
-            //}
-            //else if (keys.IsKeyDown(Key.Left))
-            //{
-            //    cameraRotation *= Matrix4.CreateRotationY(-(float)timer.Elapsed.TotalSeconds);
-            //}
-
-            scene.Update(timer);
+			if (keys.IsKeyDown(Key.I))
+			{
+				cameraRotation *= Matrix4.CreateRotationX(-(float)timer.Elapsed.TotalSeconds);
+			}
+			else if (keys.IsKeyDown(Key.K))
+			{
+				cameraRotation *= Matrix4.CreateRotationX((float)timer.Elapsed.TotalSeconds);
+			}
+			else if (keys.IsKeyDown(Key.J))
+			{
+				cameraRotation *= Matrix4.CreateRotationY(-(float)timer.Elapsed.TotalSeconds);
+			}
+			else if (keys.IsKeyDown(Key.L))
+			{
+				cameraRotation *= Matrix4.CreateRotationY((float)timer.Elapsed.TotalSeconds);
+			}
+			else if (keys.IsKeyDown(Key.U))
+			{
+				cameraRotation = Matrix4.Identity;
+			}
+			cameraPosition = Matrix4.CreateTranslation(camera);
+			// update scene
+			scene.Update(timer, keys, prevkeys, ref cameraPosition, ref cameraRotation, mouse, prevmouse);
             timer.Restart();
         }
 
-		// tick for OpenGL rendering code
+		// rendering
 		public void RenderGL()
 		{
 
@@ -214,31 +219,6 @@ namespace Template
             GL.DisableVertexAttribArray(1);
             GL.Disable(EnableCap.Texture2D);
 
-
-
-            //GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            //GL.Clear(ClearBufferMask.DepthBufferBit);
-            //GL.Clear(ClearBufferMask.ColorBufferBit);
-            //GL.ClearColor(Color.Black);
-            //GL.EnableVertexAttribArray(0);
-            //GL.EnableVertexAttribArray(1);
-            //GL.Enable(EnableCap.Texture2D);
-            //GL.ActiveTexture(TextureUnit.Texture1);
-            //GL.BindTexture(TextureTarget.Texture2D, colorbuffer[0]);
-
-            //GL.UseProgram(rendershader.programID);
-
-
-            //GL.BindVertexArray(quadVertexbuffer);
-            //GL.BindVertexArray(quadTexbuffer);
-            //GL.Disable(EnableCap.DepthTest);
-            //GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-            //GL.UseProgram(0);
-            //GL.DisableVertexAttribArray(0);
-            //GL.DisableVertexAttribArray(1);
-            //GL.Disable(EnableCap.Texture2D);
-
-
             //Render
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Clear(ClearBufferMask.DepthBufferBit);
@@ -247,8 +227,6 @@ namespace Template
             GL.EnableVertexAttribArray(0);
             GL.EnableVertexAttribArray(1);
             GL.Enable(EnableCap.Texture2D);
-
-
             GL.UseProgram(rendershader.programID);
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, colorbuffer[0]);

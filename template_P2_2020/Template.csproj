@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="car.cs" />
     <Compile Include="cubeDepthmap.cs" />
     <Compile Include="cubemap.cs" />
     <Compile Include="depthmap.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="template.cs" />
     <Compile Include="texture.cs" />
     <Compile Include="train.cs" />
+    <Compile Include="wheel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

@@ -1,7 +1,7 @@
 # Blender MTL File: 'None'
 # Material Count: 2
 
-newmtl metalMat1
+newmtl metalMat1.002
 Ns 86.470579
 Ka 0.564815 0.564815 0.564815
 Kd 0.800000 0.800000 0.800000
@@ -11,7 +11,7 @@ Ni 1.450000
 d 0.000000
 illum 6
 
-newmtl rubberMat
+newmtl rubberMat.002
 Ns 86.470579
 Ka 1.000000 1.000000 1.000000
 Kd 0.006848 0.006848 0.006848

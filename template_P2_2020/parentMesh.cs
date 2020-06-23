@@ -74,6 +74,7 @@ namespace Template
             }
         }
 
+		// render cubemap
         public void RenderCubemap(Matrix4 parentMatrix, SceneGraph scene)
         {
             Matrix4 finalTransform = localScale * localRotation * localTranslation * parentMatrix;
@@ -89,6 +90,7 @@ namespace Template
             }
         }
 
+		// calculate final transformation
         public Matrix4 CalcFinalTransform()
         {
             if(parent != null)

@@ -1,5 +1,6 @@
 #version 420
 
+// structs for lights
 struct pointlight{
 	vec3 position;
 	float strength;
@@ -36,6 +37,7 @@ vec3 normalVec;
 vec3 texColor;
 vec3 viewDirection;
 
+//functions
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color);
 
 // shader output
@@ -44,18 +46,22 @@ layout(location = 0) out vec4 outputColor;
 // fragment shader
 void main()
 {
+	//camera view direction
 	viewDirection = normalize(position - viewPos.xyz);
     texColor = texture( pixels, uv ).xyz;
 	
-
+	//set normals
 	normalVec = normalize(normal.xyz);
 
-	vec3 color = vec3(0);
+	//ambient color
+	vec3 color = texColor * 0.15;
 
+	//directional lights
 	for(int i = 0; i < directionalLightCount; ++i) {
 		Phong(normalize(directionalLights[i].direction), normalVec, directionalLights[i].strength, directionalLights[i].color, color);
 	}
 
+	//pointlights
 	for(int i = 0; i < pointlightCount; ++i) {
 		vec3 lightDirection = pointlights[i].position - position;
 		float strength = pointlights[i].strength / (length(lightDirection) * length(lightDirection));
@@ -63,12 +69,15 @@ void main()
 		Phong(lightDirection, normalVec, strength, pointlights[i].color, color);
 	}
 
+	//spotlights
 	for(int i = 0; i < spotlightCount; ++i) {
 		vec3 lightDirection = spotlights[i].position - position;
 		if(dot(normalize(lightDirection), -spotlights[i].direction) > spotlights[i].angle) {
 			Phong(normalize(lightDirection), normalVec, spotlights[i].strength / (length(lightDirection) * length(lightDirection)), spotlights[i].color, color); 
 		}
 	}
+
+	//write to output
 	outputColor = vec4(color, 1);
 	
 } 

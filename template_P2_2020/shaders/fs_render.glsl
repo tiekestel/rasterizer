@@ -7,8 +7,8 @@ layout (binding = 1) uniform sampler2D renderedTexture;
 layout (binding = 2) uniform sampler2D hdrTexture;
 
 void main() {
+	//tone mapping and mixing hdr with normal rendered scene
 	vec2 distVector = Texcoords - vec2(0.5);
-	//float vignet = distance(distVector, vec2(0));
 	vec3 color = texture(renderedTexture, Texcoords).rgb;
 	vec3 hdrColor = texture(hdrTexture, Texcoords).rgb;
 	if(hdrColor.x < 0) hdrColor.x = 0;
@@ -17,6 +17,5 @@ void main() {
 	color += hdrColor;
 	color = vec3(1) - exp(-color * 1);
 	color = pow(color, vec3(1 / 1.2));
-	//color -= vec3(vignet * vignet);
 	outputColor = vec4(color, 1);
 }

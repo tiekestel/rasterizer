@@ -26,6 +26,8 @@ void main()
 
 	normal = mat4(transpose(inverse(transform))) * vec4(vNormal, 0);
 	uv = vUV;
+
+	//set tbn matrix for normal mapping/
 	vec3 T = normalize(vec3(transform * vec4(vTangent, 0)));
 	vec3 B = normalize(vec3(transform * vec4(vBitangent, 0)));
 	vec3 N = normalize(vec3(transform * vec4(vNormal, 0)));
