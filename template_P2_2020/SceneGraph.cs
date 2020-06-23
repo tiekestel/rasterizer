@@ -212,7 +212,7 @@ namespace Template
             }
 
             //car
-            ParentMesh carbody = new ParentMesh(new Mesh("../../assets/car/Cars.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(0, -1.99f, 0), Matrix4.CreateScale(1), Matrix4.Identity, primaryMeshes[0]);
+            ParentMesh carbody = new ParentMesh(new Mesh("../../assets/car/Cars.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(0, -1.99f, 1), Matrix4.CreateScale(0.2f), Matrix4.CreateRotationY((float)(0.5 * Math.PI)), primaryMeshes[0]);
             primaryMeshes[0].Add(carbody);
 
             directionalLights = new List<DirectionalLight>();
