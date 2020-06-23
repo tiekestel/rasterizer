@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ namespace Template
 
     public class Spotlight
     {
-        public Vector4 position, direction;
+        public Vector4 position, direction, localPosition, localDirection;
         public float strength;
         public Vector3 color;
         public ParentMesh parent;
@@ -57,13 +58,23 @@ namespace Template
 
         public Spotlight(Vector4 _position, Vector4 _direction, float _strength, Vector3 _color, ParentMesh _parent, float _angle)
         {
-            position = _position;
-            direction = _direction;
+            localPosition = _position;
+            localDirection = _direction;
             strength = _strength;
             color = _color;
             parent = _parent;
             angle = _angle;
             shadowMap = new depthmap(this);
+        }
+
+        public void calc()
+        {
+            if(parent != null)
+            {
+                Matrix4 parentmatrix = parent.CalcFinalTransform();
+                position =  localPosition*parentmatrix.ClearScale();
+                direction = localDirection*parentmatrix;
+            }
         }
     }
 
@@ -73,24 +84,141 @@ namespace Template
         List<Pointlight> pointlights;
         List<DirectionalLight> directionalLights;
         List<Spotlight> spotlights;
+        List<gameObject> gameObjects;
         int skyboxbuffer, skybox;
 
-		public SceneGraph()
-		{
-            ParentMesh world = new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/black.jpg"), Matrix4.CreateScale(4.0f), 0, 0, new Texture("../../normalMaps/crystal.jpg"));
-            ParentMesh teapot = new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 0)), 0,1);
+        public SceneGraph()
+        {
             primaryMeshes = new List<ParentMesh>();
-            primaryMeshes.Add(world);
-            primaryMeshes.Add(teapot);
-            primaryMeshes.Add(new ParentMesh(new Mesh("../../assets/teapot.obj"), new Texture("../../assets/wood.jpg"), Matrix4.CreateScale(0.5f) * Matrix4.CreateTranslation(new Vector3(0, 0, 10)), 9));
+            gameObjects = new List<gameObject>();
+            //floor
+            primaryMeshes.Add(new ParentMesh(new Mesh("../../assets/floor.obj"), new Texture("../../assets/grass/grassfloor.jpg", false), Matrix4.Identity, Matrix4.CreateScale(8f), Matrix4.Identity, null, 0, 0, new Texture("../../assets/grass/grassnormal.jpg", true)));
+
+            //traintracks
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(1, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-1.02f, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-3.04f, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-5.06f, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-7.08f, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(3.02f, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(5.04f, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/traintracks/rail_straight.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(7.06f, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            ParentMesh train = new ParentMesh(new Mesh("../../assets/train/train.obj"), new Texture("../../assets/train/color.png", false), Matrix4.CreateTranslation(10, -2, 3), Matrix4.CreateScale(0.1f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0], 0, 0, new Texture("../../assets/train/normal.png", false));
+            gameObjects.Add(new train(train));
+            primaryMeshes[0].Add(train);
+
+            //roads
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-7.5f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-6.5f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road_tr.obj"), new Texture("../../assets/roads/Road_tr.png", false), Matrix4.CreateTranslation(-5.6f, -1.99f, 0.99f), Matrix4.CreateScale(0.47f), Matrix4.Identity, primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-4.7f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-3.7f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-2.7f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-1.7f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-0.7f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(0.3f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(1.3f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(2.3f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(3.3f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road_sq.obj"), new Texture("../../assets/roads/Road_sq.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 0.99f), Matrix4.CreateScale(0.47f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(5.1f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(6.1f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(7.1f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(8.1f, -1.99f, 1), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 1.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 2.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 3.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 4.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 5.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 6.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 7.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, 0.1f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, -0.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, -1.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, -2.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, -3.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road_tr.obj"), new Texture("../../assets/roads/Road_tr.png", false), Matrix4.CreateTranslation(4.21f, -1.99f, -4.8f), Matrix4.CreateScale(0.47f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, -5.7f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, -6.7f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(4.2f, -1.99f, -7.7f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(3.3f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(2.3f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(1.3f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(0.3f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-0.7f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-1.7f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-2.7f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-3.7f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-4.7f, -1.99f, -4.8f), Matrix4.CreateScale(0.5f), Matrix4.CreateRotationY((float)(0.5f * Math.PI)), primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road_ro.obj"), new Texture("../../assets/roads/Road_ro.png", false), Matrix4.CreateTranslation(-5.6f, -1.99f, -4.8f), Matrix4.CreateScale(0.47f), Matrix4.CreateRotationY((float)(-0.5f * Math.PI)), primaryMeshes[0]));
+
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-5.6f, -1.99f, 0.1f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-5.6f, -1.99f, -0.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-5.6f, -1.99f, -1.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-5.6f, -1.99f, -2.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/roads/Road.obj"), new Texture("../../assets/roads/Road.png", false), Matrix4.CreateTranslation(-5.6f, -1.99f, -3.9f), Matrix4.CreateScale(0.5f), Matrix4.Identity, primaryMeshes[0]));
+
+            //buildings
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/part1model.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(5.1f, -1.99f, -3.4f), Matrix4.CreateScale(0.05f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/KinderGarten.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(3.5f, -1.99f, 5.4f), Matrix4.CreateScale(1f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/igloo.obj"), new Texture("../../assets/tiles.jpg", false), Matrix4.CreateTranslation(2.5f, -1.99f, -2.8f), Matrix4.CreateScale(0.02f), Matrix4.CreateRotationY((float)(0.25 * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/igloo.obj"), new Texture("../../assets/wood.jpg", false), Matrix4.CreateTranslation(1.5f, -1.99f, -0.9f), Matrix4.CreateScale(0.02f), Matrix4.CreateRotationY((float)(-0.15 * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/igloo.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(0.2f, -1.99f, -3.4f), Matrix4.CreateScale(0.02f), Matrix4.CreateRotationY((float)(0.5 * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/igloo.obj"), new Texture("../../assets/tiles.jpg", false), Matrix4.CreateTranslation(-1f, -1.99f, -0.4f), Matrix4.CreateScale(0.02f), Matrix4.CreateRotationY((float)(-0.55 * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/igloo.obj"), new Texture("../../assets/wood.jpg", false), Matrix4.CreateTranslation(-2f, -1.99f, -3.4f), Matrix4.CreateScale(0.02f), Matrix4.CreateRotationY((float)(0.65 * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/igloo.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-3f, -1.99f, -0.9f), Matrix4.CreateScale(0.02f), Matrix4.CreateRotationY((float)(0.65 * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/buildings/igloo.obj"), new Texture("../../assets/tiles.jpg", false), Matrix4.CreateTranslation(-4f, -1.99f, -2.8f), Matrix4.CreateScale(0.02f), Matrix4.CreateRotationY((float)(0.25 * Math.PI)), primaryMeshes[0]));
+
+            //trees
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Carrot.obj"), new Texture("../../assets/trees/carrot.png", false), Matrix4.CreateTranslation(-1f, -1f, 5.5f), Matrix4.CreateScale(5), Matrix4.CreateRotationZ((float)(0.5 * Math.PI)), primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Popular_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(-7f, -1.99f, -2f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Fir_Tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(-6.7f, -1.99f, -6.6f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Palm_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(-4f, -1.99f, -5.5f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Popular_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(-1f, -1.99f, -6.3f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Popular_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(-0.5f, -1.99f, -6f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Fir_Tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(2f, -1.99f, -6.6f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Palm_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(5f, -1.99f, -6f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Popular_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(6.6f, -1.99f, -1.9f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Fir_Tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(5.6f, -1.99f, 2f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Palm_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(6f, -1.99f, 6f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Palm_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(6.5f, -1.99f, 5.8f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+            primaryMeshes[0].Add(new ParentMesh(new Mesh("../../assets/trees/Palm_tree.obj"), new Texture("../../assets/trees/Fir_tree.png", false), Matrix4.CreateTranslation(6.7f, -1.99f, 6.5f), Matrix4.CreateScale(0.2f), Matrix4.Identity, primaryMeshes[0]));
+
+            //streetlamps
+            ParentMesh[] streetlamps = new ParentMesh[5]
+            {
+                new ParentMesh(new Mesh("../../assets/streetlamp.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-5.7f, -1.99f, -5.2f), Matrix4.CreateScale(0.3f), Matrix4.CreateRotationY((float)(0.75 * Math.PI)), primaryMeshes[0]),
+                new ParentMesh(new Mesh("../../assets/streetlamp.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-5.5f, -1.99f, 1.5f), Matrix4.CreateScale(0.3f), Matrix4.CreateRotationY((float)(-0.5 * Math.PI)), primaryMeshes[0]),
+                new ParentMesh(new Mesh("../../assets/streetlamp.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(4.7f, -1.99f, -4.9f), Matrix4.CreateScale(0.3f), Matrix4.Identity, primaryMeshes[0]),
+                new ParentMesh(new Mesh("../../assets/streetlamp.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(-1f, -1.99f, 1.5f), Matrix4.CreateScale(0.3f), Matrix4.CreateRotationY((float)(-0.5 * Math.PI)), primaryMeshes[0]),
+                new ParentMesh(new Mesh("../../assets/streetlamp.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(4.7f, -1.99f, 5.5f), Matrix4.CreateScale(0.3f), Matrix4.Identity, primaryMeshes[0])
+            };
+
+            spotlights = new List<Spotlight>();
+            for(int i = 0; i < streetlamps.Length; ++i)
+            {
+                spotlights.Add(new Spotlight(new Vector4(0, 4, 0, 1), Vector4.Normalize(new Vector4(-1, -1, 0, 0)), 100, new Vector3(1, 1, 1), streetlamps[i], 0.9f));
+                primaryMeshes[0].Add(streetlamps[i]);
+            }
+
+            //car
+            ParentMesh carbody = new ParentMesh(new Mesh("../../assets/car/Cars.obj"), new Texture("../../assets/black.jpg", false), Matrix4.CreateTranslation(0, -1.99f, 0), Matrix4.CreateScale(1), Matrix4.Identity, primaryMeshes[0]);
+            primaryMeshes[0].Add(carbody);
+
             directionalLights = new List<DirectionalLight>();
             directionalLights.Add(new DirectionalLight(new Vector4(-1f, 1, 0, 1), 1, new Vector3(1, 1, 1), null));
             pointlights = new List<Pointlight>();
-            //pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 500, new Vector3(1, 1, 1), null));
             pointlights.Add(new Pointlight(new Vector4(0, 20, 0, 1), 0, new Vector3(1, 1, 1), null));
-            spotlights = new List<Spotlight>();
-            //spotlights.Add(new Spotlight(new Vector4(20,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
-            //spotlights.Add(new Spotlight(new Vector4(20,8, 0, 1), new Vector4(0.1f, -1, 0, 1), 1000, new Vector3(0, 0, 1), null, 0.8f));
             float[] skyboxVertices = new float[] {
 				// positions          
 				-1.0f,  1.0f, -1.0f,
@@ -204,6 +332,7 @@ namespace Template
             }
             foreach(Spotlight s in spotlights)
             {
+                s.calc();
                 s.shadowMap.Render(programValues.depthmapshader, this);
             }
 
@@ -257,6 +386,14 @@ namespace Template
             GL.DepthFunc(DepthFunction.Less);
             GL.Disable(EnableCap.DepthTest);
         }
+
+        public void Update(Stopwatch gameTime)
+        {
+            foreach(gameObject g in gameObjects)
+            {
+                g.Update(gameTime);
+            }
+        }
         int LoadCubemap(string[] faces)
         {
             int textureID = GL.GenTexture();
@@ -280,5 +417,7 @@ namespace Template
 
             return textureID;
         }
+
+
     }
 }

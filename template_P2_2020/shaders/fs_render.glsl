@@ -11,6 +11,9 @@ void main() {
 	//float vignet = distance(distVector, vec2(0));
 	vec3 color = texture(renderedTexture, Texcoords).rgb;
 	vec3 hdrColor = texture(hdrTexture, Texcoords).rgb;
+	if(hdrColor.x < 0) hdrColor.x = 0;
+	if(hdrColor.y < 0) hdrColor.y = 0;
+	if(hdrColor.z < 0) hdrColor.z = 0;
 	color += hdrColor;
 	color = vec3(1) - exp(-color * 1);
 	color = pow(color, vec3(1 / 1.2));

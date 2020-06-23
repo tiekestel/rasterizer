@@ -52,6 +52,7 @@ bool Shadow(vec4 positionLightspace, sampler2D shadowMap, vec3 lightDirection, f
 bool Shadow(vec3 lightPosition, samplerCube shadowMap);
 // shader output
 layout(location = 0) out vec4 outputColor;
+layout(location = 1) out vec4 brightColor;
 
 // fragment shader
 void main()
@@ -91,9 +92,10 @@ void main()
 	for(int i = 0; i < spotlightCount; ++i) {
 		vec3 lightDirection = spotlights[i].position - position;
 		if(dot(normalize(lightDirection), -spotlights[i].direction) > spotlights[i].angle) {
-			if(Shadow(spotlights[i].lightSpace * vec4(position,1),spotlights[i].shadowMap, -spotlights[i].direction, 1000)){
-				Phong(normalize(lightDirection), normalVec, spotlights[i].strength / (length(lightDirection) * length(lightDirection)), spotlights[i].color, color); 
-			}
+//			if(Shadow(spotlights[i].lightSpace * vec4(position,1),spotlights[i].shadowMap, -spotlights[i].direction, 1000)){
+//				Phong(normalize(lightDirection), normalVec, spotlights[i].strength / (length(lightDirection) * length(lightDirection)), spotlights[i].color, color);
+//			}
+Phong(normalize(lightDirection), normalVec, spotlights[i].strength / (length(lightDirection) * length(lightDirection)), spotlights[i].color, color);
 		}
 	}
 
@@ -107,7 +109,13 @@ void main()
 	}
 
 	outputColor = vec4(color, 1);
+
 	
+	float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+	if(brightness > 1)
+		brightColor = outputColor;
+	else
+		brightColor = vec4(vec3(0),1);
 } 
 
 void Phong(in vec3 lightDirection, in vec3 normal, in float strength, in vec3 lightColor, inout vec3 color) {
@@ -125,7 +133,7 @@ bool Shadow(vec4 positionLightspace, sampler2D shadowMap, vec3 lightDirection, f
 	projCoord = projCoord *0.5 + 0.5;
 	float mapdepth = texture(shadowMap,projCoord.xy).r;
 	float depth = positionLightspace.z / zFar;
-	float bias = max(0.05 * 1.0 - dot(normalVec, lightDirection),0.005);
+	float bias = max(0.05 * 1.0 - dot(normalVec, lightDirection),0.001);
 	return depth - bias <= mapdepth;
 }
 
@@ -134,6 +142,6 @@ bool Shadow(vec3 lightPosition, samplerCube shadowMap){
 	float mapdepth = texture(shadowMap, fragToLight).r;
 	float depth = length(fragToLight) / 500;
 	float bias = 0.05;
-	return depth - 0.01 <= mapdepth;
+	return depth <= mapdepth;
 }
 

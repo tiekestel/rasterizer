@@ -51,6 +51,7 @@
     <Compile Include="cubeDepthmap.cs" />
     <Compile Include="cubemap.cs" />
     <Compile Include="depthmap.cs" />
+    <Compile Include="gameObject.cs" />
     <Compile Include="mesh.cs" />
     <Compile Include="meshLoader.cs" />
     <Compile Include="MyApplication.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="surface.cs" />
     <Compile Include="template.cs" />
     <Compile Include="texture.cs" />
+    <Compile Include="train.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

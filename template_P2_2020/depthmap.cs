@@ -33,7 +33,7 @@ namespace Template
             if (GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != FramebufferErrorCode.FramebufferComplete)
                 Console.WriteLine("depthbuffer not set up correctly");
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            position = Matrix4.CreateTranslation(light.direction.Xyz * -100);
+            position = Matrix4.CreateTranslation(light.direction.Xyz * -200);
             camera = position * Matrix4.LookAt(Vector3.Zero, -light.direction.Xyz, Vector3.UnitY) * Matrix4.CreatePerspectiveFieldOfView((float)(Math.PI * 0.5), 1, 0.01f, 1000);
         }
         public depthmap(Spotlight light)

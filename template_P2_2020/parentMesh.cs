@@ -15,17 +15,20 @@ namespace Template
         ParentMesh parent;
         Mesh mesh;
         Texture texture, normalMap;
-        public Matrix4 localTransform;
+        public Matrix4 localTranslation, localScale, localRotation;
         public float intensity;
         cubemap cubemap;
 
-        public ParentMesh(Mesh _mesh, Texture _texture, Matrix4 _localTransform, float hdr = 0, int _cubemap = 0, Texture _normalMap = null, ParentMesh _parent = null)
+        public ParentMesh(Mesh _mesh, Texture _texture, Matrix4 _localTransform, Matrix4 _localScale, Matrix4 _localRotation, ParentMesh _parent = null, float hdr = 0, int _cubemap = 0, Texture _normalMap = null)
         {
             mesh = _mesh;
             texture = _texture;
-            localTransform = _localTransform;
+            localTranslation = _localTransform;
+            localScale = _localScale;
+            localRotation = _localRotation;
             normalMap = _normalMap;
             parent = _parent;
+            
             intensity = hdr;
             if (_cubemap != 0)
             {
@@ -42,7 +45,7 @@ namespace Template
         public void Render(Matrix4 parentMatrix, Matrix4 camera, Matrix4 cameraPosition, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights)
         {
             //Combine matrices
-            Matrix4 finalTransform = localTransform * parentMatrix;
+            Matrix4 finalTransform = localScale * localRotation * localTranslation * parentMatrix;
 
             mesh.Render(shader, finalTransform, camera, cameraPosition, intensity, texture, normalMap, cubemap, pointlights, directionalLights, spotlights);
 
@@ -56,7 +59,7 @@ namespace Template
         public void SimpleRender(Matrix4 parentMatrix, Matrix4 camera, Matrix4 cameraPosition, Shader shader, List<Pointlight> pointlights, List<DirectionalLight> directionalLights, List<Spotlight> spotlights, ParentMesh parentMesh)
         {
             //Combine matrices
-            Matrix4 finalTransform = localTransform * parentMatrix;
+            Matrix4 finalTransform = localScale * localRotation * localTranslation * parentMatrix;
 
             //dont render the object because it cant reflect/refract itself
             if(parentMesh != this)
@@ -73,7 +76,7 @@ namespace Template
 
         public void RenderCubemap(Matrix4 parentMatrix, SceneGraph scene)
         {
-            Matrix4 finalTransform = localTransform * parentMatrix;
+            Matrix4 finalTransform = localScale * localRotation * localTranslation * parentMatrix;
             if (cubemap != null)
             {
                 Vector3 transform = finalTransform.Row3.Xyz;
@@ -90,11 +93,11 @@ namespace Template
         {
             if(parent != null)
             {
-                return localTransform * parent.CalcFinalTransform();
+                return localScale * localRotation * localTranslation * parent.CalcFinalTransform();
             }
             else
             {
-                return localTransform;
+                return localScale * localRotation * localTranslation;
             }
         }
     }
